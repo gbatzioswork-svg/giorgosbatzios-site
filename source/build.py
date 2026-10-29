@@ -228,12 +228,12 @@ def build_home(lang):
 <div class="wrap">
   <section class="hero">
     <div>
-      <h1 class="dotted">Giorgos<br>Batzios</h1>
+      <h1 class="intro"><span class="ln"><span>Giorgos</span></span><span class="ln"><span class="dotted">Batzios</span></span></h1>
       <p class="role">{L(SITE['role'], lang)}</p>
     </div>
     <img class="hero-img mask-squircle" src="{sq(IMG['home1'], 1200)}" alt="Giorgos Batzios" width="1200" height="1200">
   </section>
-  <hr class="divider">
+  <div class="wave-wrap" aria-hidden="true"><canvas class="wave"></canvas></div>
   <section class="split">
     <img class="split-img mask-octagon" src="{sq(IMG['home2'], 1200)}" alt="Giorgos Batzios" loading="lazy" width="1000" height="1200">
     <ul class="fields">{fields}</ul>
