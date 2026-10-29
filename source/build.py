@@ -3,7 +3,7 @@ import html, json, os, shutil
 from datetime import date
 from content import *
 
-OUT = os.path.join(os.path.dirname(__file__), "dist")
+OUT = os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", "site")
 e = html.escape
 
 
