@@ -2,3 +2,4 @@ __pycache__/
 source/__pycache__/
 source/dist/
 source/pages.json
+site/version.txt

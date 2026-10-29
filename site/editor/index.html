@@ -1,0 +1,64 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="robots" content="noindex, nofollow">
+<meta name="color-scheme" content="dark">
+<meta name="theme-color" content="#0d0d0e">
+<title>GB EDITOR</title>
+<link rel="icon" href="/assets/favicon.svg" type="image/svg+xml">
+<link rel="preload" href="/assets/fonts/geist-var.woff" as="font" type="font/woff" crossorigin>
+<link rel="stylesheet" href="editor.css">
+</head>
+<body>
+<div id="app">
+  <section class="login" id="login" hidden>
+    <form class="login-box" id="login-form">
+      <p class="brand dotted">GB EDITOR</p>
+      <p class="muted">Edit giorgosbatzios.com</p>
+      <label for="pw">Password<input id="pw" type="password" autocomplete="current-password" required autofocus></label>
+      <button class="btn primary" type="submit">Enter</button>
+      <p class="login-msg" id="login-msg" role="alert"></p>
+    </form>
+  </section>
+
+  <section class="boot" id="boot"><p class="brand dotted">GB EDITOR</p><p class="muted" id="boot-msg">Loading…</p></section>
+
+  <div class="shell" id="shell" hidden>
+    <header class="top">
+      <div class="top-row">
+        <a class="brand dotted" href="./" title="GB EDITOR">GB EDITOR</a>
+        <p class="status" id="status" role="status" aria-live="polite"></p>
+        <div class="actions">
+          <button class="btn ghost small" id="discard" type="button" hidden>Discard changes</button>
+          <button class="btn" id="preview" type="button">Preview</button>
+          <button class="btn primary" id="push" type="button">Push</button>
+          <details class="more">
+            <summary class="btn ghost small" aria-label="More">•••</summary>
+            <div class="menu">
+              <a id="open-live" href="https://www.giorgosbatzios.com" target="_blank" rel="noopener">Open live site ↗</a>
+              <a id="open-preview" href="#" target="_blank" rel="noopener">Open last preview ↗</a>
+              <button type="button" id="reset">Throw away changes that aren't live</button>
+              <button type="button" id="logout">Log out</button>
+            </div>
+          </details>
+        </div>
+      </div>
+      <nav class="tabs" id="tabs" aria-label="Sections"></nav>
+    </header>
+    <main class="main" id="main"></main>
+  </div>
+
+  <div class="overlay" id="overlay" hidden>
+    <div class="dialog" role="dialog" aria-modal="true" aria-labelledby="dlg-title">
+      <h2 id="dlg-title"></h2>
+      <div id="dlg-body"></div>
+      <div class="dlg-actions" id="dlg-actions"></div>
+    </div>
+  </div>
+  <div class="toast" id="toast" role="status" aria-live="polite" hidden></div>
+</div>
+<script src="editor.js" defer></script>
+</body>
+</html>

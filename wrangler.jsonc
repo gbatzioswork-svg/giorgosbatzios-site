@@ -15,6 +15,7 @@
   "previews": {},
   "routes": [
     { "pattern": "giorgosbatzios.com", "custom_domain": true },
-    { "pattern": "www.giorgosbatzios.com", "custom_domain": true }
+    { "pattern": "www.giorgosbatzios.com", "custom_domain": true },
+    { "pattern": "editor.giorgosbatzios.com", "custom_domain": true }
   ]
 }
