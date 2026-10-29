@@ -20,7 +20,7 @@ SITE = {
 }
 
 # Free key from web3forms.com (sent to your email). Empty = the form opens the visitor's email app instead.
-FORM_KEY = ""
+FORM_KEY = "c824cd4e-3fca-4de5-a855-7970cae83560"
 
 SOCIAL = [
     ("Instagram", "https://www.instagram.com/giorgos_batzios/"),
