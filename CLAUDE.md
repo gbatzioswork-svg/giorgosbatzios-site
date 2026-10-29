@@ -22,13 +22,17 @@ Make the change, rebuild, check, commit and push. Keep replies short and non-tec
 - `site/` — the built output that Cloudflare serves. Never edit by hand; it is regenerated.
 - `wrangler.jsonc` — Cloudflare Workers config (serves `./site`, custom domains giorgosbatzios.com + www).
 
-## Workflow
-1. Edit `source/content.py` (and images if any).
-2. `python3 source/build.py` (rewrites `site/`, ~38 pages).
+## Workflow (preview first, then publish)
+The owner wants to SEE changes before they go live.
+1. Work on the `preview` branch (`git checkout preview && git merge main` to bring it up to date).
+2. Edit `source/content.py` (and images if any), then `python3 source/build.py` (rewrites `site/`, ~38 pages).
 3. Check: every relative `href`/`src` in `site/**/*.html` resolves to a file; no Python `None` text in pages.
-4. Commit and push to `main`. Cloudflare Workers Builds deploys automatically in ~1 minute.
-   If a build hangs/fails at "Initializing", it's Cloudflare's side: tell the owner to click **Retry build**.
-5. Confirm it's live (e.g. fetch https://giorgosbatzios.gbatzios-work.workers.dev/ or the domain).
+4. Commit and push `preview`. Cloudflare builds a draft copy in ~1 minute at
+   **https://preview-giorgosbatzios.gbatzios-work.workers.dev** (Greek: `/el/`). Send the owner that link.
+5. Only when the owner says **"push"** (or "publish"/"ok, live"): merge `preview` into `main` and push `main`.
+   That deploys to giorgosbatzios.com. If he explicitly says to push straight away, skip the preview.
+6. Confirm it's live. If a build hangs/fails at "Initializing", it's Cloudflare's side: tell the owner to click **Retry build**.
+   Preview builds need `"previews": {}` in wrangler.jsonc (already there).
 
 ## Design (agreed with the owner — keep it)
 - Always dark, minimal, one typeface (Geist). Red accent `#b9472f` (the shirt in the home photo) used only for the small round dot after names/titles (`.dotted`) and hovers.
