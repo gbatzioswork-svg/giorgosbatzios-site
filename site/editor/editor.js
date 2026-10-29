@@ -11,7 +11,6 @@
   let unpublished = false;      // preview has changes that are not live yet
   let PREVIEW_URL = "https://preview-giorgosbatzios.gbatzios-work.workers.dev";
   let LIVE_URL = "https://www.giorgosbatzios.com";
-  let savingNow = false;
   let busy = "";
   const pending = new Map();    // "/assets/img/x.webp" -> data URL of a new picture made in this session
   const sent = new Set();       // pictures already saved to the preview
@@ -227,7 +226,7 @@
       return;
     }
     const when = new Date(d.at).toLocaleString();
-    const ok = await confirmBox("Unsaved changes found", "You had changes from " + when + " that were never previewed. Bring them back?", "Bring them back");
+    const ok = await confirmBox("Unsaved changes found", "You had changes from " + when + " that were never pushed. Bring them back?", "Bring them back");
     if (ok) {
       C = d.content;
       for (const [p, u] of Object.entries(d.images || {})) pending.set(p, u);
@@ -251,9 +250,8 @@
     const dirty = C && isDirty();
     let cls = "status ", msg;
     if (busy) { cls += "busy"; msg = busy; }
-    else if (savingNow) { cls += "busy"; msg = "Saving…"; }
-    else if (dirty) { cls += "dirty"; msg = "Changes not saved yet — press Preview to see them"; }
-    else if (unpublished) { cls += "dirty"; msg = "Saved, not live yet — press Push to publish"; }
+    else if (dirty) { cls += "dirty"; msg = "Changes not live yet — Preview to check them, Push to publish"; }
+    else if (unpublished) { cls += "dirty"; msg = "Saved changes are not live yet — press Push to publish"; }
     else { cls += "ok"; msg = "Everything is live"; }
     s.className = cls;
     s.replaceChildren(h("span", { class: "dot" }), msg);
@@ -951,6 +949,16 @@
   }
 
   // ------------------------------------------------------------------ save / preview / push
+  function payload() {
+    const txt = JSON.stringify(C);
+    const images = [];
+    for (const [p, d] of pending) {
+      if (sent.has(p) || !txt.includes(p.replace(/-sm(\.\w+)$/, "$1"))) continue;
+      images.push({ path: "source" + p, data: d.split(",")[1] });
+    }
+    return { txt, images, body: { content: C, images, base: head } };
+  }
+
   async function save() {
     const txt = JSON.stringify(C);
     const images = [];
@@ -988,7 +996,7 @@
         if (s.failed) return { ok: false, failed: true, link: s.link };
       } catch (e) { if (e.status === 401) throw e; }
       if (onTick) onTick(Math.round((Date.now() - t0) / 1000));
-      await sleep(5000);
+      await sleep(4000);
     }
     return { ok: false, timeout: true };
   }
@@ -1072,33 +1080,7 @@
       toast("Could not make the preview: " + err.message, true);
       return;
     }
-    if (isDirty()) saveQuietly(); // keep the work safe on the server, without waiting
-  }
-
-  // Save in the background (after a preview). Push waits for it.
-  let saving = null;
-  function saveQuietly() {
-    if (saving) return saving;
-    saving = (async () => {
-      savingNow = true; status();
-      try {
-        await save();
-      } catch (err) {
-        if (err.code === "conflict") {
-          keepDraftNow(true);
-          await dialog({ title: "The site changed somewhere else", body: "The site was changed somewhere else (probably by Claude) while you were editing. Your changes are kept on this computer: reload the editor and they will be offered back to you.", buttons: [{ label: "Reload", value: true, primary: true }] });
-          saved = JSON.stringify(C);
-          location.reload();
-        } else {
-          toast("Your changes are only on this computer for now (" + err.message + "). Press Preview again to retry.", true);
-        }
-      } finally {
-        savingNow = false;
-        saving = null;
-        status();
-      }
-    })();
-    return saving;
+    // (nothing is sent to the server until Push: your changes are kept in this browser meanwhile)
   }
 
   function keepDraftNow(sameBaseless) {
@@ -1112,15 +1094,20 @@
     if (!isDirty() && !unpublished) { toast("Nothing new to publish — everything is already live"); return; }
     if (!(await checkFirst())) return;
     const msg = isDirty()
-      ? ["You have changes you haven't previewed yet. They will go straight to giorgosbatzios.com.", "Publish everything now?"]
-      : ["Everything you saw in the preview will go live on giorgosbatzios.com. It takes about a minute.", "Publish now?"];
+      ? ["All your changes will go live on giorgosbatzios.com. It takes about a minute.", "Publish now?"]
+      : ["The saved changes will go live on giorgosbatzios.com. It takes about a minute.", "Publish now?"];
     if (!(await confirmBox("Push to the live site?", msg, "Push live"))) return;
     try {
-      if (saving) { busy = "Saving…"; status(); await saving; }
-      if (isDirty()) { busy = "Saving…"; status(); await save(); }
       busy = "Publishing…"; status();
-      const r = await call("publish", {});
+      const dirty = isDirty();
+      const pl = payload();
+      const r = await call("publish", dirty ? pl.body : {});
       if (r.head) head = r.head;
+      if (dirty) {
+        saved = pl.txt;
+        for (const im of pl.images) sent.add(im.path.slice(6));
+        try { localStorage.removeItem(DRAFT); } catch {}
+      }
       busy = "Putting it live… (about a minute)"; status();
       const w = await waitFor("live", r.commit, (s) => { busy = "Putting it live… " + s + "s"; status(); });
       busy = ""; status();
@@ -1136,7 +1123,7 @@
   }
 
   async function doDiscard() {
-    if (!(await confirmBox("Discard changes?", "All changes since the last Preview will be lost.", "Discard", true))) return;
+    if (!(await confirmBox("Discard changes?", "All changes since the last Push will be lost.", "Discard", true))) return;
     C = JSON.parse(saved);
     for (const p of [...pending.keys()]) if (!sent.has(p)) pending.delete(p);
     try { localStorage.removeItem(DRAFT); } catch {}
@@ -1166,7 +1153,7 @@
   $("#push").addEventListener("click", doPush);
   $("#discard").addEventListener("click", doDiscard);
   $("#logout").addEventListener("click", async () => {
-    if (C && isDirty() && !(await confirmBox("Log out?", "You have changes that are not previewed yet. They stay saved on this computer only.", "Log out"))) return;
+    if (C && isDirty() && !(await confirmBox("Log out?", "You have changes that are not pushed yet. They stay saved on this computer only.", "Log out"))) return;
     if (C && isDirty()) keepDraftNow(false);
     await fetch("/api/logout", { method: "POST", headers: { "X-GB": "1" }, credentials: "same-origin" }).catch(() => {});
     saved = JSON.stringify(C);

@@ -41,10 +41,12 @@ The owner's own editing app, same look as the site. Files: `source/editor/` (ind
 - Password login → signed cookie. Secrets in Cloudflare (Worker → Settings → Variables and Secrets):
   `EDITOR_PASSWORD` (only the owner knows it) and `GITHUB_TOKEN` (fine-grained, Contents read/write on this repo only).
 - API in worker.js: `GET /api/content` (syncs preview with main, returns content.json from preview), `POST /api/save`
-  (one commit on `preview` with content.json + new images in `source/assets/img/`), `POST /api/publish` (merges preview → main,
-  then fast-forwards preview), `POST /api/reset` (preview = main), `GET /api/status` (compares `version.txt` with a commit).
+  (one commit on `preview`), `POST /api/publish` (the editor's changes + everything on `preview` → ONE commit; `main` is
+  fast-forwarded first so the live build starts before the preview build, then `preview`; merges only if main has extra commits),
+  `POST /api/reset` (preview = main), `GET /api/status` (live: this Worker's own `version.txt`; preview: GitHub check runs).
 - Preview button = instant: renders all pages in the browser with render.mjs into a cache that `sw.js` (service worker,
-  scope `/preview/` on the editor host) serves; then saves to `preview` in the background. Push = save + publish + wait for the live build.
+  scope `/preview/` on the editor host) serves. Nothing goes to GitHub until Push (unsaved work is kept in localStorage).
+- Cloudflare builds one thing at a time, so every extra commit to `preview` can delay a live push by ~1 minute.
 - The editor commits to the same `preview` branch Claude uses: always `git pull` first, and never force-push `preview` or `main`.
 - If you add a new kind of content to content.json, also add fields for it in editor.js so the owner can edit it.
 

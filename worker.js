@@ -168,6 +168,30 @@ async function ownVersion(env) {
   }
 }
 
+function conflict() {
+  return json({ error: "conflict", message: "The site was changed somewhere else in the meantime. Reload the editor to continue." }, 409);
+}
+
+// One commit on top of `parent` with the new content.json and any new pictures. Returns its sha.
+async function makeCommit(env, parent, body) {
+  const baseTree = (await gh(env, "/git/commits/" + parent)).data.tree.sha;
+  const tree = [];
+  for (const img of body.images || []) {
+    if (!/^source\/assets\/img\/[a-z0-9._-]+\.(webp|jpg|jpeg|png)$/i.test(img.path)) continue;
+    const blob = await gh(env, "/git/blobs", { method: "POST", body: { content: img.data, encoding: "base64" } });
+    tree.push({ path: img.path, mode: "100644", type: "blob", sha: blob.data.sha });
+  }
+  const text = JSON.stringify(body.content, null, 1) + "\n";
+  const blob = await gh(env, "/git/blobs", { method: "POST", body: { content: text, encoding: "utf-8" } });
+  tree.push({ path: CONTENT_PATH, mode: "100644", type: "blob", sha: blob.data.sha });
+  const newTree = await gh(env, "/git/trees", { method: "POST", body: { base_tree: baseTree, tree } });
+  const commit = await gh(env, "/git/commits", {
+    method: "POST",
+    body: { message: String(body.message || "Edit from GB EDITOR").slice(0, 200), tree: newTree.data.sha, parents: [parent] },
+  });
+  return commit.data.sha;
+}
+
 // ------------------------------------------------------------------ API
 async function api(request, env, url) {
   const route = url.pathname.replace(/^\/api\//, "");
@@ -208,45 +232,44 @@ async function api(request, env, url) {
     const body = await request.json();
     if (!body || typeof body.content !== "object") return json({ error: "bad_request" }, 400);
     const head = await headSha(env, PREVIEW_BRANCH);
-    if (body.base && body.base !== head) {
-      return json({ error: "conflict", message: "The site was changed somewhere else in the meantime. Reload the editor to continue." }, 409);
-    }
-    const baseTree = (await gh(env, "/git/commits/" + head)).data.tree.sha;
-    const tree = [];
-    for (const img of body.images || []) {
-      if (!/^source\/assets\/img\/[a-z0-9._-]+\.(webp|jpg|jpeg|png)$/i.test(img.path)) continue;
-      const blob = await gh(env, "/git/blobs", { method: "POST", body: { content: img.data, encoding: "base64" } });
-      tree.push({ path: img.path, mode: "100644", type: "blob", sha: blob.data.sha });
-    }
-    const text = JSON.stringify(body.content, null, 1) + "\n";
-    const blob = await gh(env, "/git/blobs", { method: "POST", body: { content: text, encoding: "utf-8" } });
-    tree.push({ path: CONTENT_PATH, mode: "100644", type: "blob", sha: blob.data.sha });
-    const newTree = await gh(env, "/git/trees", { method: "POST", body: { base_tree: baseTree, tree } });
-    const commit = await gh(env, "/git/commits", {
-      method: "POST",
-      body: { message: (body.message || "Edit from GB EDITOR").slice(0, 200), tree: newTree.data.sha, parents: [head] },
-    });
-    await gh(env, "/git/refs/heads/" + PREVIEW_BRANCH, { method: "PATCH", body: { sha: commit.data.sha } });
-    return json({ ok: true, head: commit.data.sha });
+    if (body.base && body.base !== head) return conflict();
+    const sha = await makeCommit(env, head, body);
+    await gh(env, "/git/refs/heads/" + PREVIEW_BRANCH, { method: "PATCH", body: { sha } });
+    return json({ ok: true, head: sha });
   }
 
-  // ---- publish: bring everything from preview into the live site
+  // ---- publish: everything in preview (+ the editor's unsaved changes, if sent) goes live in ONE commit.
+  // main is moved first so the live build starts before any preview build (Cloudflare builds one at a time).
   if (route === "publish" && request.method === "POST") {
+    const body = await request.json().catch(() => ({}));
+    let head = await headSha(env, PREVIEW_BRANCH);
+    if (body && typeof body.content === "object") {
+      if (body.base && body.base !== head) return conflict();
+      head = await makeCommit(env, head, { ...body, message: body.message || "Publish from GB EDITOR" });
+    }
+    const live = await headSha(env, LIVE_BRANCH);
+    if (live === head) return json({ ok: true, nothing: true, commit: live, head });
+    try {
+      await gh(env, "/git/refs/heads/" + LIVE_BRANCH, { method: "PATCH", body: { sha: head, force: false } }); // fast-forward
+      await gh(env, "/git/refs/heads/" + PREVIEW_BRANCH, { method: "PATCH", body: { sha: head, force: false } }).catch(() => {});
+      return json({ ok: true, commit: head, head });
+    } catch (err) {
+      if (err.status !== 422) throw err;
+    }
+    // live has changes that preview doesn't (made outside the editor): merge instead
+    await gh(env, "/git/refs/heads/" + PREVIEW_BRANCH, { method: "PATCH", body: { sha: head, force: false } });
     const r = await gh(env, "/merges", {
       method: "POST",
       body: { base: LIVE_BRANCH, head: PREVIEW_BRANCH, commit_message: "Publish from GB EDITOR" },
       ok: [204],
     });
-    const live = r.status === 204 ? await headSha(env, LIVE_BRANCH) : r.data.sha;
-    // keep preview identical to live afterwards (fast-forward, never loses anything)
-    let head = await headSha(env, PREVIEW_BRANCH);
-    if (r.status !== 204) {
-      try {
-        await gh(env, "/git/refs/heads/" + PREVIEW_BRANCH, { method: "PATCH", body: { sha: live, force: false } });
-        head = live;
-      } catch { /* preview moved meanwhile; the next load merges it */ }
-    }
-    return json({ ok: true, nothing: r.status === 204, commit: live, head });
+    const merged = r.status === 204 ? await headSha(env, LIVE_BRANCH) : r.data.sha;
+    let newHead = head;
+    try {
+      await gh(env, "/git/refs/heads/" + PREVIEW_BRANCH, { method: "PATCH", body: { sha: merged, force: false } });
+      newHead = merged;
+    } catch { /* preview moved meanwhile; the next load merges it */ }
+    return json({ ok: true, commit: merged, head: newHead });
   }
 
   // ---- throw away everything on preview that is not live
@@ -265,7 +288,7 @@ async function api(request, env, url) {
     if (target === "live" && (await ownVersion(env)) === commit) return json({ ready: true });
     let runs = [];
     try {
-      runs = (await gh(env, "/commits/" + commit + "/check-runs?per_page=50")).data.check_runs || [];
+      runs = (await gh(env, "/commits/" + commit + "/check-runs?filter=all&per_page=50")).data.check_runs || [];
     } catch { /* not reported yet */ }
     const mine = runs.filter((r) => (target === "preview") === (r.details_url || "").includes("/previews/"));
     const bad = mine.find((r) => r.status === "completed" && r.conclusion && !["success", "neutral", "skipped"].includes(r.conclusion));

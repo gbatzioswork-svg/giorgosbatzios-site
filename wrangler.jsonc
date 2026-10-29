@@ -5,7 +5,8 @@
   "main": "worker.js",
   // Every deploy (live and preview) first rebuilds ./site from source/content.json,
   // so edits saved by GB EDITOR always show up. Pillow (share-preview cards) is only installed for the live site, to keep previews fast.
-  "build": { "command": "if [ \"$WORKERS_CI_BRANCH\" = \"main\" ]; then pip install -q pillow; fi; python3 source/build.py" },
+  // (skipped when the dashboard build command already built this exact commit)
+  "build": { "command": "if [ -n \"$WORKERS_CI_COMMIT_SHA\" ] && [ \"$(cat site/version.txt 2>/dev/null)\" = \"$WORKERS_CI_COMMIT_SHA\" ]; then echo site already built; else if [ \"$WORKERS_CI_BRANCH\" = \"main\" ]; then pip install -q pillow; fi; python3 source/build.py; fi" },
   "assets": {
     "directory": "./site",
     "binding": "ASSETS",
