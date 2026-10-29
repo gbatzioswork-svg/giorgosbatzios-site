@@ -8,8 +8,12 @@ e = html.escape
 
 
 def sq(url, w=1000):
-    """Squarespace CDN resize (ignored once images are local)."""
-    return f"{url}?format={w}w" if "squarespace-cdn" in url else url
+    """Map an original Squarespace image address to our own copy in /assets/img.
+    Small sizes (thumbnails) use the lighter -sm version."""
+    if "squarespace-cdn" not in url:
+        return url
+    key = url.split("67b51908870e605d6a390286/")[1].split("/")[0][:13].lower()
+    return f"/assets/img/{key}{'-sm' if w <= 800 else ''}.webp"
 
 
 def yt(vid, title=""):
@@ -65,7 +69,7 @@ def page(path, title, desc, body, og=None):
 <meta property="og:title" content="{e(full)}">
 <meta property="og:description" content="{e(desc)}">
 <meta property="og:url" content="{SITE['url']}{path}">
-<meta property="og:image" content="{sq(og, 1500)}">
+<meta property="og:image" content="{SITE['url']}{sq(og, 1500)}">
 <meta name="twitter:card" content="summary_large_image">
 <link rel="icon" href="/assets/favicon.svg" type="image/svg+xml">
 <link rel="preconnect" href="https://fonts.googleapis.com">
