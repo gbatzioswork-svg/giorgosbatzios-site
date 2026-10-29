@@ -21,6 +21,13 @@ Make the change, rebuild, check, commit and push. Keep replies short and non-tec
   (paths that don't contain `squarespace-cdn` are used as-is; use the `-sm` file for thumbnails where needed).
 - `site/` — the built output that Cloudflare serves. Never edit by hand; it is regenerated.
 - `wrangler.jsonc` — Cloudflare Workers config (serves `./site`, custom domains giorgosbatzios.com + www).
+- `worker.js` — tiny Worker in front of the files: 301-redirects giorgosbatzios.com → www.giorgosbatzios.com
+  (one address for Google; canonical/sitemap use www), then serves `./site`.
+- `source/ogcard.py` + `source/og-fonts/` — build.py draws a 1200×630 share-preview card per page into `site/og/`.
+- `source/assets/fonts/` — self-hosted Geist (Latin) + Inter (Greek letters), OFL licensed. No Google Fonts.
+- Name: English pages use "Giorgos Batzios", Greek pages "Γιώργος Μπάτζιος" (`NAME` in build.py).
+- Every page has schema.org data (Person, WebSite, BreadcrumbList, VideoObject list for Studio, CreativeWork list for Theater,
+  SoftwareApplication for devices/plugins). Every `<img>` needs a descriptive `alt` in the page's language.
 
 ## Workflow (preview first, then publish)
 The owner wants to SEE changes before they go live.
