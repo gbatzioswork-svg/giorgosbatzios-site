@@ -132,7 +132,7 @@ def person_ld():
 
 def page(path, lang, title, desc, body, og=None, ld=None):
     """path is the language-neutral path, e.g. /theater/."""
-    full = f"{title} — {SITE['name']}" if title else f"{SITE['name']} — {L(T('Sound engineer & musician', 'Ηχολήπτης & μουσικός'), lang)}"
+    full = f"{title} — {SITE['name']}" if title else f"{SITE['name']} — {L(SITE['role'], lang)}"
     og = og or IMG["home1"]
     other = "el" if lang == "en" else "en"
     url = SITE["url"] + U(lang, path)
