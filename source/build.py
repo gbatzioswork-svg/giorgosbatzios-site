@@ -18,6 +18,9 @@ def yt(vid, title=""):
             f'<span class="play"></span></button></div>')
 
 
+ARROW = '<svg class="ic" viewBox="0 0 24 24" aria-hidden="true"><path d="M7 17 17 7M8 7h9v9" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"/></svg>'
+
+
 def sc(track):
     return (f'<div class="sc tall"><iframe loading="lazy" title="SoundCloud player" allow="autoplay" '
             f'src="https://w.soundcloud.com/player/?url=https%3A//api.soundcloud.com/tracks/{track}&color=%23cf3b20&visual=true&show_artwork=true"></iframe></div>')
@@ -47,12 +50,14 @@ def nav(cur):
 def page(path, title, desc, body, og=None):
     full = f"{title} — {SITE['name']}" if title else f"{SITE['name']} — Sound engineer & musician"
     og = og or IMG["home1"]
-    socials = "".join(f'<li><a href="{u}" target="_blank" rel="noopener">{n}</a></li>' for n, u in SOCIAL)
+    socials = "".join(f'<li><a href="{u}" target="_blank" rel="noopener">{n}{ARROW}</a></li>' for n, u in SOCIAL)
     doc = f"""<!doctype html>
 <html lang="en">
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="color-scheme" content="dark">
+<meta name="theme-color" content="#0d0d0e">
 <title>{e(full)}</title>
 <meta name="description" content="{e(desc)}">
 <link rel="canonical" href="{SITE['url']}{path}">
@@ -72,7 +77,7 @@ def page(path, title, desc, body, og=None):
 <svg width="0" height="0" style="position:absolute" aria-hidden="true"><defs><clipPath id="m-squircle" clipPathUnits="objectBoundingBox"><path d="M0.5,0 C0.768,0,0.894,0.056,0.919,0.081 C0.944,0.106,1,0.242,1,0.505 C1,0.768,0.947,0.891,0.919,0.919 C0.891,0.947,0.768,1,0.5,1 C0.202,1,0.11,0.948,0.081,0.919 C0.052,0.89,0,0.768,0,0.5 C0,0.232,0.053,0.109,0.081,0.081 C0.109,0.053,0.232,0,0.5,0"/></clipPath><clipPath id="m-octagon" clipPathUnits="objectBoundingBox"><path d="M0.5,0 L0.957,0.065,1,0.5,0.957,0.935 L0.5,1,0.043,0.935,0,0.5,0.043,0.065,0.5,0"/></clipPath></defs></svg>
 <a class="skip" href="#main">Skip to content</a>
 <header class="site-head"><div class="wrap head-row">
-<a class="mark" href="/">Giorgos Batzios</a>
+<a class="mark" href="/">Giorgos Batzios<span class="dot">.</span></a>
 <button class="menu-btn" type="button" aria-expanded="false" aria-controls="nav">Menu</button>
 <nav class="nav" id="nav" aria-label="Main">{nav(path)}</nav>
 </div></header>
@@ -134,6 +139,7 @@ def build_home():
     </div>
     <img class="hero-img mask-squircle" src="{sq(IMG['home1'], 1200)}" alt="Giorgos Batzios at the piano" width="1200" height="1200">
   </section>
+  <hr class="divider">
   <section class="split">
     <img class="split-img mask-octagon" src="{sq(IMG['home2'], 1200)}" alt="Giorgos Batzios at the mixing desk" loading="lazy" width="1000" height="1200">
     <ul class="fields">{fields}</ul>
@@ -154,7 +160,7 @@ def build_theater():
   <img src="{sq(img, 300)}" alt="" loading="lazy" width="76" height="76">
   <div><h3 lang="el">{e(title)}</h3><p class="venue" lang="el">{e(venue)}</p></div>
   <p class="roles">{e(" · ".join(roles))}</p>
-  <span class="go" aria-hidden="true">↗</span>
+  <span class="go">{ARROW}</span>
 </a>''')
     body = head("Theater", f"{len(THEATER)} productions", "Sound mixing, lights and AV programming, and show operation for theater productions in Athens and on tour around Greece.") + \
         f'<div class="wrap">{"".join(rows)}</div>'
@@ -166,10 +172,11 @@ def build_studio():
     counts = {c: sum(c in s[2] for s in STUDIO) for c in STUDIO_CATS}
     btns = f'<button type="button" data-cat="all" aria-pressed="true">All<span class="n">{len(STUDIO)}</span></button>' + "".join(
         f'<button type="button" data-cat="{c}" aria-pressed="false">{c}<span class="n">{counts[c]}</span></button>' for c in STUDIO_CATS)
-    first, rest = STUDIO[0], STUDIO[1:]
+    first = next(s for s in STUDIO if s[3] == FEATURED_STUDIO)
+    rest = [s for s in STUDIO if s is not first]
     feat = f'''<article class="featured" data-cats="{"|".join(first[2])}">
   {yt(first[3], first[0])}
-  <div><p class="kicker">Featured</p><h3 style="margin-top:10px">{e(first[0])}</h3><p class="note">{e(first[4])}</p><p class="meta">{" · ".join(first[2])}</p></div>
+  <div><p class="kicker">Featured</p><h3 style="margin-top:10px">{e(first[0])}</h3>{f'<p class="note">{e(first[4])}</p>' if first[4] else ""}<p class="meta">{" · ".join(first[2])}</p></div>
 </article>'''
     cards = "".join(f'''<article class="card" data-cats="{"|".join(s[2])}">
   {yt(s[3], s[0])}
@@ -242,7 +249,7 @@ def block(b, title):
     if k == "yt":
         return yt(b[1], title)
     if k == "link":
-        return f'<a class="ext" href="{e(b[1])}" target="_blank" rel="noopener">{e(b[2])}</a>'
+        return f'<a class="ext" href="{e(b[1])}" target="_blank" rel="noopener">{e(b[2])}{ARROW}</a>'
     if k == "mono":
         return f'<div class="mono">{e(b[1])}</div>'
     raise ValueError(k)
@@ -251,7 +258,7 @@ def block(b, title):
 def build_project(base, sect, items, i):
     p = items[i]
     lang = "en" if base == "/daw-plugins/" else "el"
-    dl = f'<a class="btn" href="{e(p["download"][0])}" target="_blank" rel="noopener">{e(p["download"][1])} ↗</a>' if p.get("download") else ""
+    dl = f'<a class="btn" href="{e(p["download"][0])}" target="_blank" rel="noopener">{e(p["download"][1])}{ARROW}</a>' if p.get("download") else ""
     blocks = "".join(block(b, p["title"]) for b in p["blocks"])
     prev_ = items[i - 1] if i > 0 else None
     next_ = items[i + 1] if i < len(items) - 1 else None
@@ -273,8 +280,8 @@ def build_academic():
     for t, inst, video, reports, thumb in ACADEMIC:
         links = []
         if video:
-            links.append(f'<a class="ext" href="{e(video)}" target="_blank" rel="noopener">{"Watch video" if "youtube" in video else "Project files"}</a>')
-        links += [f'<a class="ext" href="{e(u)}" target="_blank" rel="noopener">{e(l)}</a>' for l, u in reports]
+            links.append(f'<a class="ext" href="{e(video)}" target="_blank" rel="noopener">{"Watch video" if "youtube" in video else "Project files"}{ARROW}</a>')
+        links += [f'<a class="ext" href="{e(u)}" target="_blank" rel="noopener">{e(l)}{ARROW}</a>' for l, u in reports]
         main = video or (reports[0][1] if reports else "#")
         cards.append(f'<article class="acad"><a class="thumb" href="{e(main)}" target="_blank" rel="noopener" tabindex="-1"><img src="{sq(thumb, 800)}" alt="" loading="lazy" width="800" height="450"></a>'
                      f'<div><p class="kicker">{e(inst)}</p><h3 style="margin-top:4px">{el(t)}</h3></div><div class="links">{"".join(links)}</div></article>')
@@ -320,7 +327,7 @@ def build_cv():
 
 # ------------------------------------------------------------------ Contact
 def build_contact():
-    socials = "".join(f'<li><a href="{u}" target="_blank" rel="noopener">{n} ↗</a></li>' for n, u in SOCIAL)
+    socials = "".join(f'<li><a href="{u}" target="_blank" rel="noopener">{n}{ARROW}</a></li>' for n, u in SOCIAL)
     body = head("Contact", "Athens, Greece", "Get in touch using the form, by email, or through the links below.") + f'''
 <div class="wrap contact">
   <div>
@@ -334,7 +341,7 @@ def build_contact():
     </form>
     <ul class="socials" style="margin-top:44px">{socials}</ul>
   </div>
-  <img class="photo mask-squircle" src="{sq(IMG['contact'], 1000)}" alt="Giorgos Batzios" loading="lazy" width="1000" height="1000">
+  <img class="photo mask-squircle" src="{sq(IMG['contact'], 1000)}" alt="Giorgos Batzios" loading="lazy" width="750" height="1123">
 </div>'''
     page("/contact/", "Contact", "Contact Giorgos Batzios for theater sound, live sound, recording and mixing.", body, IMG["contact"])
 

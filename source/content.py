@@ -83,22 +83,22 @@ STUDIO = [
     ("ταφρομι x Drog – Όσα (Prod. CXLVII)", "2022-03-20", [R], "UxLbrRdIyD0", "", "44ntd7btyfl95y5hz2r3ttypdxlyw4"),
     ("Drog – Ποιός (Official Music Video)", "2022-02-04", [R], "lT4HVZaaLN0", "", "saturday-morning-flow-xw6jw-zjh87"),
     ("ATOM – Hold On (Official Music Video)", "2021-08-01", [R], "gi6gEntZaCY", "", "sunday-morning-flow-wwkfj-zslm6"),
-    ("Daniel Se – Fiesta (prod. by Just EvAn) Official Music Video", "2021-06-16", [R], "sQh9HBMH6ac", "", "monday-morning-flow-c5f9z-yhkcy"),
+    ("Daniel Se – Fiesta (prod. by Just EvAn) Official Music Video", "2021-06-16", [R], "Q_dpMUxtTck", "", "monday-morning-flow-c5f9z-yhkcy"),
     ("NowHere – Ιδέα (Video Clip)", "2021-04-22", [R, M, P], "c4VO4xzGtzA", "", "it-is-nhsde-3akh4-2d2ch"),
     ("784L – Πρώτα θα πέσεις", "2021-03-05", [R], "qnYJoyOpQMU", "", "xmyfc72rcy8ee96jg9kal6jym63szg"),
     ("HOT STAFF – Happy (funk cover) | Quarantine Edition", "2021-02-15", [M, V], "vj_UaDglAsk", "", "planet-earth-mejnx-d2a8y-gb6mj"),
     ("Κοίτα με – Labrina Manou – Frozen 2 / Show Yourself (Greek)", "2021-01-21", [R, M, V], "79i8t_34P_0", "", "blj2djf2h3ht6tk2jrpmed4ey5tglp"),
-    ("Daniel Se – «Καύλα & Μελάνι» Official Music Video (Prod. B-Spot)", "2020-12-27", [R, M, P, V], "peXXcfovrIY", "", "thursday-morning-flow-xay84-r35ma"),
+    ("Daniel Se – «Καύλα & Μελάνι» Official Music Video (Prod. B-Spot)", "2020-12-27", [R, M, P, V], "f7FGA_umC44", "", "thursday-morning-flow-xay84-r35ma"),
     ("Drog – Η Άγχος (Official Music Video)", "2020-12-06", [R, M, P, V], "u8Z0DK2mTEs", "", "friday-morning-flow-6esng-dyffs"),
-    ("Daniel Se – Ατέλεια (Prod. B-Spot) Official Music Video", "2020-11-23", [R, M, P, V], "k3Gp5SXackA", "", "hosted-with-custom-z9ehj-dwh9x-w8ee8"),
-    ("Dream On – Daniel Se ft. Sofía (Prod. B-Spot) Official Music Video", "2020-08-16", [R, M, P], "tOscMg1sK0s", "", "wednesday-morning-flow-bd32w-wbjn4"),
+    ("Daniel Se – Ατέλεια (Prod. B-Spot) Official Music Video", "2020-11-23", [R, M, P, V], "t7BKH2e_P9s", "", "hosted-with-custom-z9ehj-dwh9x-w8ee8"),
+    ("Dream On – Daniel Se ft. Sofía (Prod. B-Spot) Official Music Video", "2020-08-16", [R, M, P], "YhofpDYpBMY", "", "wednesday-morning-flow-bd32w-wbjn4"),
     ("Prima Vista – Sofía (Video Clip)", "2020-08-10", [R, M, P, V], "WtC4xYX2dCo", "", "pka2tn8sgzetmmryazfll9yh5hynfh"),
     ("B-Spot – No Mercy {House} (Sax: Angel Cure)", "2020-07-14", [R, M, P, V], "bbaLCCXcs9U", "", "8agb29ggxgw9845r9rpp49klbgcsk3"),
     ("In Your Eyes – Sofía (The Weeknd Cover)", "2020-05-29", [R, M], "cZqRUSYdMBE", "", "daily-calm-yyhd4-ajaee"),
     ("Η άκρη του ορίζοντα – MICE The Swing Band (Quarantine Session #3)", "2020-05-03", [R, M, V], "9iv26e58UHE", "", "how-to-create-an-under-construction-page-nmhkn-et8z6-yhr99"),
     ("Όταν το ανοίξεις – MICE The Swing Band / Μάκης Δημάκης Swing Remake (Quarantine Session #2)", "2020-04-26", [R, M, V], "cQ0nJ9nLRLY", "", "john-mcenroe-does-voice-over-now-zpk5h-tc9nt-bn9x6"),
     ("Αφού το θες – MICE The Swing Band (Quarantine Session #1)", "2020-04-13", [R, M, V], "-5hiflGz-38", "", "everything-to-sell-anything-427ge-88xsk-zc9f6"),
-    ("Daniel Se – Κατάθεση (prod. B-Spot) Official Video", "2020-03-21", [R], "fLYJU57za10", "", "new-video-k65jc-eyepy"),
+    ("Daniel Se – Κατάθεση (prod. B-Spot) Official Video", "2020-03-21", [R], "xTITAPpuZxY", "", "new-video-k65jc-eyepy"),
 ]
 
 # ---------------------------------------------------------------- Music
@@ -340,3 +340,6 @@ CV = {
         ("Behringer", "X Series"),
     ],
 }
+
+# YouTube id of the Studio video shown large at the top of the Studio page
+FEATURED_STUDIO = "t7BKH2e_P9s"  # Daniel Se – Ατέλεια
