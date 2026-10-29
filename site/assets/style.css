@@ -317,4 +317,23 @@ section.split { margin-top: 0; }
   .nav > a:hover::after { transform: scaleX(1); }
 }
 
-@media (prefers-reduced-motion: reduce) { *, *::before, *::after { transition: none !important; animation: none !important; } html { scroll-behavior: auto; } .reveal { opacity: 1; transform: none; } @view-transition { navigation: none; } }
+
+/* ================= futuristic layer ================= */
+.progress { position: absolute; left: 0; right: 0; bottom: -1px; height: 1.5px; background: var(--accent); transform: scaleX(0); transform-origin: left; pointer-events: none; }
+
+.cursor-ring { position: fixed; left: 0; top: 0; width: 26px; height: 26px; margin: -13px 0 0 -13px; border: 1.5px solid rgb(255 255 255 / .55); border-radius: 50%; pointer-events: none; z-index: 100; opacity: 0; transition: width .25s ease, height .25s ease, margin .25s ease, opacity .25s ease, border-color .25s ease, background .25s ease; }
+.cursor-ring.on { opacity: 1; }
+.cursor-ring.big { width: 54px; height: 54px; margin: -27px 0 0 -27px; border-color: var(--accent); background: rgb(185 71 47 / .08); }
+
+/* mouse light on cards */
+.glow { position: relative; isolation: isolate; }
+.glow::after { content: ""; position: absolute; inset: 0; border-radius: inherit; pointer-events: none; opacity: 0; transition: opacity .3s ease;
+  background: radial-gradient(260px circle at var(--mx, 50%) var(--my, 50%), rgb(255 255 255 / .09), transparent 65%); z-index: 2; }
+.glow:hover::after { opacity: 1; }
+/* hero: a technical dot grid that appears only around the mouse */
+.hero.glow::after { inset: -40px calc(-1 * var(--gut)); border-radius: 0; z-index: -1;
+  background-image: radial-gradient(rgb(255 255 255 / .22) 1px, transparent 1.4px); background-size: 22px 22px;
+  -webkit-mask: radial-gradient(220px circle at calc(var(--mx, 50%) + var(--gut)) calc(var(--my, 50%) + 40px), #000, transparent 75%);
+  mask: radial-gradient(220px circle at calc(var(--mx, 50%) + var(--gut)) calc(var(--my, 50%) + 40px), #000, transparent 75%); }
+
+@media (prefers-reduced-motion: reduce) { *, *::before, *::after { transition: none !important; animation: none !important; } html { scroll-behavior: auto; } .reveal { opacity: 1; transform: none; } @view-transition { navigation: none; } .cursor-ring { display: none; } }

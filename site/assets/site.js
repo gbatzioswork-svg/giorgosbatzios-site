@@ -147,7 +147,6 @@
     });
     canvas.parentElement.addEventListener("pointerleave", function () { mouseX = -1; });
   }
-  var accent = getComputedStyle(document.documentElement).getPropertyValue("--accent").trim() || "#b9472f";
 
   function drawWave() {
     var mid = H / 2, n = Math.max(80, Math.floor(W / 4));
@@ -159,24 +158,17 @@
     grad.addColorStop(0.82, "rgba(255,255,255,.55)");
     grad.addColorStop(1, "rgba(255,255,255,0)");
     ctx.strokeStyle = grad; ctx.lineWidth = 1.2; ctx.beginPath();
-    var peakX = 0, peakY = mid;
     for (var i = 0; i <= n; i++) {
       var x = i / n, env = Math.sin(Math.PI * x); // fade to flat at both ends
       var m = mouseX >= 0 ? Math.exp(-Math.pow((x - mouseX) * 7, 2)) * 1.6 : 0;
       var y = Math.sin(x * 38 + t * 3.1) * 0.55 + Math.sin(x * 91 - t * 4.7) * 0.3 + Math.sin(x * 13 + t * 1.3) * 0.4;
-      var yy = mid + y * env * (H * 0.36) * Math.min(energy + m * 0.5, 1.6);
+      var amp = Math.tanh((energy + m * 0.5) * 1.1);          // soft limiter: never above 1
+      var yy = mid + (y / 1.25) * env * (mid - 3) * amp;      // 1.25 = largest possible sum of the three waves
       if (i === 0) ctx.moveTo(x * W, yy); else ctx.lineTo(x * W, yy);
-      if (Math.abs(yy - mid) > Math.abs(peakY - mid) && env > 0.3) { peakX = x * W; peakY = yy; }
     }
     ctx.stroke();
-    // a small red "playhead" travelling along the line
-    var px = ((t * 0.06) % 1) * W, pe = Math.sin(Math.PI * px / W);
-    ctx.fillStyle = accent; ctx.globalAlpha = pe;
-    ctx.beginPath(); ctx.arc(px, mid, 3, 0, Math.PI * 2); ctx.fill();
-    ctx.globalAlpha = 1;
   }
 
-  var ticking = false;
   function frame() {
     var y = window.scrollY, v = Math.abs(y - lastY); lastY = y;
     energy += Math.min(v / 120, 0.5);            // scrolling makes the wave move more
@@ -210,4 +202,85 @@
       el.addEventListener("pointerleave", function () { el.classList.remove("tilting"); el.style.transform = ""; });
     });
   }
+})();
+
+/* ================= futuristic layer ================= */
+(function () {
+  var reduce = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+  var finePointer = window.matchMedia("(hover: hover) and (pointer: fine)").matches;
+  var root = document.documentElement;
+
+  // Thin red scroll-progress line under the top bar
+  var head = document.querySelector(".site-head");
+  if (head) {
+    var bar = document.createElement("span");
+    bar.className = "progress"; bar.setAttribute("aria-hidden", "true");
+    head.appendChild(bar);
+    var setP = function () {
+      var max = root.scrollHeight - window.innerHeight;
+      bar.style.transform = "scaleX(" + (max > 0 ? Math.min(window.scrollY / max, 1) : 0).toFixed(4) + ")";
+    };
+    window.addEventListener("scroll", setP, { passive: true });
+    window.addEventListener("resize", setP);
+    setP();
+  }
+  if (reduce) return;
+
+  // Page titles "decode" from random characters into the real word
+  var glyphs = "ABCDEFGHIKLMNOPRSTUVXZΑΒΓΔΕΖΗΘΛΞΠΣΦΨΩ0123456789/#*+";
+  function scramble(el, duration) {
+    var text = el.textContent, start = null;
+    if (!text.trim()) return;
+    el.setAttribute("aria-label", text);
+    function step(ts) {
+      if (!start) start = ts;
+      var p = Math.min((ts - start) / duration, 1), out = "";
+      for (var i = 0; i < text.length; i++) {
+        var ch = text[i];
+        out += (ch === " " || i < Math.floor(p * text.length)) ? ch : glyphs[(Math.random() * glyphs.length) | 0];
+      }
+      el.textContent = out;
+      if (p < 1) requestAnimationFrame(step); else el.textContent = text;
+    }
+    requestAnimationFrame(step);
+  }
+  document.querySelectorAll(".page-head h1").forEach(function (h) { scramble(h, 650); });
+  document.querySelectorAll(".page-head .kicker, .sec-title h2").forEach(function (k) {
+    // section titles decode when they come into view
+    if (!("IntersectionObserver" in window)) return;
+    var once = new IntersectionObserver(function (es) {
+      es.forEach(function (en) { if (en.isIntersecting) { scramble(en.target.querySelector("a") || en.target, 500); once.disconnect(); } });
+    }, { threshold: 0.6 });
+    once.observe(k);
+  });
+
+  if (!finePointer) return;
+
+  // A small ring that follows the mouse and opens up over anything clickable
+  var ring = document.createElement("div");
+  ring.className = "cursor-ring"; ring.setAttribute("aria-hidden", "true");
+  document.body.appendChild(ring);
+  var mx = -100, my = -100, rx = -100, ry = -100;
+  window.addEventListener("pointermove", function (e) {
+    mx = e.clientX; my = e.clientY;
+    var hit = e.target.closest && e.target.closest("a, button, summary, input, textarea, label, .yt");
+    ring.classList.toggle("big", !!hit);
+    ring.classList.add("on");
+  }, { passive: true });
+  document.addEventListener("pointerleave", function () { ring.classList.remove("on"); });
+  (function follow() {
+    rx += (mx - rx) * 0.2; ry += (my - ry) * 0.2;
+    ring.style.transform = "translate(" + rx.toFixed(1) + "px," + ry.toFixed(1) + "px)";
+    requestAnimationFrame(follow);
+  })();
+
+  // Soft light that follows the mouse across cards, plus a dot grid that shows around the mouse in the hero
+  document.querySelectorAll(".index a, .sel .thumb, .proj .thumb, .acad .thumb, .show, .card .yt, .hero").forEach(function (el) {
+    el.classList.add("glow");
+    el.addEventListener("pointermove", function (e) {
+      var r = el.getBoundingClientRect();
+      el.style.setProperty("--mx", (e.clientX - r.left) + "px");
+      el.style.setProperty("--my", (e.clientY - r.top) + "px");
+    });
+  });
 })();
