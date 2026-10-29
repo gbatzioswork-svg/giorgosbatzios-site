@@ -336,4 +336,15 @@ section.split { margin-top: 0; }
   -webkit-mask: radial-gradient(220px circle at calc(var(--mx, 50%) + var(--gut)) calc(var(--my, 50%) + 40px), #000, transparent 75%);
   mask: radial-gradient(220px circle at calc(var(--mx, 50%) + var(--gut)) calc(var(--my, 50%) + 40px), #000, transparent 75%); }
 
+
+/* frosted fade at the bottom of the screen, like the top bar */
+body::after { content: ""; position: fixed; left: 0; right: 0; bottom: 0; height: calc(72px + env(safe-area-inset-bottom, 0px)); z-index: 15; pointer-events: none;
+  background: linear-gradient(to top, color-mix(in srgb, var(--paper) 85%, transparent), transparent);
+  backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px);
+  -webkit-mask: linear-gradient(to top, #000 30%, transparent); mask: linear-gradient(to top, #000 30%, transparent); }
+
+/* name in capitals */
+.hero h1 { text-transform: uppercase; letter-spacing: -0.035em; }
+.mark { text-transform: uppercase; letter-spacing: 0.08em; font-size: 14px; }
+
 @media (prefers-reduced-motion: reduce) { *, *::before, *::after { transition: none !important; animation: none !important; } html { scroll-behavior: auto; } .reveal { opacity: 1; transform: none; } @view-transition { navigation: none; } .cursor-ring { display: none; } }
