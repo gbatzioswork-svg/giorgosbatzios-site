@@ -127,7 +127,8 @@
   }
 
   // Depth: the two home photos move a little slower than the page
-  var layers = Array.prototype.slice.call(document.querySelectorAll(".hero-img, .split-img"));
+  // (wide screens only: on phones the photos sit right under the text)
+  var layers = window.matchMedia("(min-width: 761px)").matches ? Array.prototype.slice.call(document.querySelectorAll(".hero-img, .split-img")) : [];
   // Sound-wave divider
   var canvas = document.querySelector(".wave");
   var ctx = canvas && canvas.getContext ? canvas.getContext("2d") : null;
