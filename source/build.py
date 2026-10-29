@@ -72,10 +72,26 @@ def yt(vid, title, lang):
 
 ARROW = '<svg class="ic" viewBox="0 0 24 24" aria-hidden="true"><path d="M7 17 17 7M8 7h9v9" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"/></svg>'
 
+# Simple outline icons for the social links (same size and stroke for all)
+_S = 'fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"'
+ICONS = {
+    "Instagram": f'<rect x="3" y="3" width="18" height="18" rx="5" {_S}/><circle cx="12" cy="12" r="4" {_S}/><circle cx="17.2" cy="6.8" r="1.1" fill="currentColor"/>',
+    "YouTube": f'<rect x="2.5" y="5.5" width="19" height="13" rx="4" {_S}/><path d="M10.2 9.3v5.4l4.6-2.7z" fill="currentColor"/>',
+    "Facebook": f'<circle cx="12" cy="12" r="9.5" {_S}/><path d="M13.2 21.4V12.5h2.6M13.2 21.4V9.3c0-1.3.7-2 2-2h1.3M10.4 12.5h2.8" {_S}/>',
+    "LinkedIn": f'<rect x="3" y="3" width="18" height="18" rx="3.5" {_S}/><path d="M8 10.5V17M11.6 17v-6.5M11.6 13.4c0-1.7 1.1-2.9 2.6-2.9s2.4 1.1 2.4 2.9V17" {_S}/><circle cx="8" cy="7.5" r="1.1" fill="currentColor"/>',
+    "Linktree": f'<path d="M12 21.5V13M5 9.5h14M7 4.5l5 5 5-5M7 14.5l5-5 5 5" {_S}/>',
+}
+
+
+def socials_html(extra_class=""):
+    items = "".join(f'<li><a href="{url}" target="_blank" rel="noopener" aria-label="{n}" title="{n}">'
+                    f'<svg viewBox="0 0 24 24" aria-hidden="true">{ICONS[n]}</svg></a></li>' for n, url in SOCIAL)
+    return f'<ul class="socials {extra_class}">{items}</ul>'
+
 
 def sc(track):
     return (f'<div class="sc"><iframe loading="lazy" title="SoundCloud player" allow="autoplay" '
-            f'src="https://w.soundcloud.com/player/?url=https%3A//api.soundcloud.com/tracks/{track}&color=%23ff6a3d&visual=true&show_artwork=true"></iframe></div>')
+            f'src="https://w.soundcloud.com/player/?url=https%3A//api.soundcloud.com/tracks/{track}&color=%23b9472f&visual=true&show_artwork=true"></iframe></div>')
 
 
 NAV = [("/theater/", "theater"), ("/studio/", "studio"), ("/music/", "music"), ("MT", "tech"),
@@ -120,7 +136,6 @@ def page(path, lang, title, desc, body, og=None, ld=None):
     og = og or IMG["home1"]
     other = "el" if lang == "en" else "en"
     url = SITE["url"] + U(lang, path)
-    socials = "".join(f'<li><a href="{s_url}" target="_blank" rel="noopener">{n}{ARROW}</a></li>' for n, s_url in SOCIAL)
     ldtag = f'<script type="application/ld+json">{ld}</script>\n' if ld else ""
     doc = f"""<!doctype html>
 <html lang="{lang}">
@@ -163,7 +178,7 @@ def page(path, lang, title, desc, body, og=None, ld=None):
 {body}
 </main>
 <footer class="site-foot"><div class="wrap foot-row">
-<ul class="socials">{socials}</ul>
+{socials_html()}
 <span class="copy">© {date.today().year} Giorgos Batzios</span>
 </div></footer>
 <script src="/assets/site.js" defer></script>
@@ -423,7 +438,6 @@ def build_cv(lang):
 
 # ------------------------------------------------------------------ Contact
 def build_contact(lang):
-    socials = "".join(f'<li><a href="{s_url}" target="_blank" rel="noopener">{n}{ARROW}</a></li>' for n, s_url in SOCIAL)
     live = bool(FORM_KEY)
     btn = u("send", lang) if live else u("write", lang)
     hint = "" if live else f'<p class="hint">{u("hint_mail", lang)}</p>'
@@ -443,7 +457,7 @@ def build_contact(lang):
       {hint}
       <p class="form-status" role="status" aria-live="polite"></p>
     </form>
-    <ul class="socials" style="margin-top:44px">{socials}</ul>
+    <div style="margin-top:44px">{socials_html()}</div>
   </div>
   <img class="photo mask-squircle" src="{sq(IMG['contact'], 1000)}" alt="Giorgos Batzios" loading="lazy" width="750" height="1123">
 </div>'''

@@ -31,7 +31,7 @@ Make the change, rebuild, check, commit and push. Keep replies short and non-tec
 5. Confirm it's live (e.g. fetch https://giorgosbatzios.gbatzios-work.workers.dev/ or the domain).
 
 ## Design (agreed with the owner — keep it)
-- Always dark, minimal, one typeface (Geist). Orange accent `#ff6a3d` used only for the small round dot after names/titles (`.dotted`) and hovers.
+- Always dark, minimal, one typeface (Geist). Red accent `#b9472f` (the shirt in the home photo) used only for the small round dot after names/titles (`.dotted`) and hovers.
 - Home photos use the original Squarespace masks: squircle (top photo, contact photo) and octagon (second photo).
 - Bold arrow icons (`ARROW` svg), not the ↗ character.
 - YouTube videos load only on click (thumbnail first). Check new YouTube IDs actually play (thumbnail must not be the 120×90 placeholder).

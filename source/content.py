@@ -11,7 +11,7 @@ CDN = "https://images.squarespace-cdn.com/content/v1/67b51908870e605d6a390286/"
 
 SITE = {
     "name": "Giorgos Batzios",
-    "role": T("Audio, sound engineer – musician", "Ηχολήπτης, sound engineer – μουσικός"),
+    "role": T("Sound & Music Technology", "Μουσική τεχνολογία & Ήχος"),
     "fields": [T("Theater", "Θέατρο"), T("Live", "Live"), T("Studio recording", "Ηχογράφηση"),
                T("Mixing", "Μίξη"), T("Composing", "Σύνθεση")],
     "email": "Gbatzios.work@gmail.com",
@@ -133,7 +133,7 @@ STUDIO = [
     ("Daniel Se – Κατάθεση (prod. B-Spot) Official Video", "2020-03-21", [R], "xTITAPpuZxY", None, "new-video-k65jc-eyepy"),
 ]
 # YouTube id of the Studio video shown large at the top of the Studio page
-FEATURED_STUDIO = "t7BKH2e_P9s"  # Daniel Se – Ατέλεια
+FEATURED_STUDIO = "c4VO4xzGtzA"  # NowHere – Ιδέα (Video Clip)
 
 # ---------------------------------------------------------------- Music
 MUSIC_ROLES = {
