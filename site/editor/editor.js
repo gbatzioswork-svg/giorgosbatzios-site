@@ -11,7 +11,7 @@
   let unpublished = false;      // preview has changes that are not live yet
   let PREVIEW_URL = "https://preview-giorgosbatzios.gbatzios-work.workers.dev";
   let LIVE_URL = "https://www.giorgosbatzios.com";
-  let lastPreviewOk = false;
+  let savingNow = false;
   let busy = "";
   const pending = new Map();    // "/assets/img/x.webp" -> data URL of a new picture made in this session
   const sent = new Set();       // pictures already saved to the preview
@@ -187,7 +187,7 @@
     PREVIEW_URL = data.previewUrl || PREVIEW_URL;
     LIVE_URL = data.liveUrl || LIVE_URL;
     $("#open-live").href = LIVE_URL;
-    $("#open-preview").href = PREVIEW_URL;
+    $("#open-preview").href = PREVIEW_BASE;
     $("#boot").hidden = true;
     $("#login").hidden = true;
     $("#shell").hidden = false;
@@ -195,6 +195,8 @@
     render();
     status();
     offerDraft();
+    previewWorker();
+    renderer().catch(() => {});
   }
 
   // ------------------------------------------------------------------ draft safety net (survives closing the tab)
@@ -249,8 +251,9 @@
     const dirty = C && isDirty();
     let cls = "status ", msg;
     if (busy) { cls += "busy"; msg = busy; }
-    else if (dirty) { cls += "dirty"; msg = "Unsaved changes — press Preview to see them"; }
-    else if (unpublished) { cls += "dirty"; msg = "Changes are in the preview, not live yet — press Push to publish"; }
+    else if (savingNow) { cls += "busy"; msg = "Saving…"; }
+    else if (dirty) { cls += "dirty"; msg = "Changes not saved yet — press Preview to see them"; }
+    else if (unpublished) { cls += "dirty"; msg = "Saved, not live yet — press Push to publish"; }
     else { cls += "ok"; msg = "Everything is live"; }
     s.className = cls;
     s.replaceChildren(h("span", { class: "dot" }), msg);
@@ -1004,38 +1007,98 @@
     return dialog({ title: "Something is slow", body, buttons: [{ label: "Open Cloudflare", href: r.link || "https://dash.cloudflare.com/?to=/:account/workers-and-pages", value: true }, { label: "OK", value: true, primary: true }] });
   }
 
+  // ---- instant preview: the real site's pages, rendered here in the browser (same code as the real build)
+  const PREVIEW_BASE = new URL("preview/", location.href).pathname; // "/preview/"
+  const PREVIEW_CACHE = "gb-preview";
+  let swReady = null;
+  function previewWorker() {
+    if (!("serviceWorker" in navigator) || !window.caches) return Promise.resolve(null);
+    if (!swReady) {
+      swReady = navigator.serviceWorker.register(new URL("sw.js", location.href).pathname, { scope: PREVIEW_BASE })
+        .then((reg) => reg.active ? reg : new Promise((resolve) => {
+          const sw = reg.installing || reg.waiting;
+          if (!sw) return resolve(reg);
+          sw.addEventListener("statechange", () => { if (sw.state === "activated") resolve(reg); });
+        }))
+        .catch(() => { swReady = null; return null; });
+    }
+    return swReady;
+  }
+  let renderFn = null;
+  async function renderer() {
+    if (!renderFn) renderFn = (await import(new URL("render.mjs", location.href).href + "?v=" + Date.now().toString(36).slice(0, -4))).render;
+    return renderFn;
+  }
+  async function buildPreview() {
+    const render = await renderer();
+    const out = render(JSON.parse(JSON.stringify(C)), { exists: (p) => pending.has(p) });
+    const base = PREVIEW_BASE.replace(/\/$/, "");
+    const cache = await caches.open(PREVIEW_CACHE);
+    for (const k of await cache.keys()) await cache.delete(k);
+    const puts = Object.entries(out.files).map(([p, text]) => {
+      // the "not found" page uses links from the site root: keep them inside the preview
+      if (p === "/404.html") text = text.split('href="/').join('href="' + base + "/").split('src="/assets').join('src="' + base + "/assets");
+      const type = p.endsWith(".html") ? "text/html; charset=utf-8" : p.endsWith(".xml") ? "application/xml" : "text/plain; charset=utf-8";
+      return cache.put(base + p, new Response(text, { headers: { "Content-Type": type, "Cache-Control": "no-store" } }));
+    });
+    for (const [p, d] of pending) {
+      puts.push(fetch(d).then((r) => r.blob()).then((blob) => cache.put(base + p, new Response(blob, { headers: { "Content-Type": blob.type } }))));
+    }
+    await Promise.all(puts);
+  }
+
   async function doPreview() {
     if (busy) return;
-    if (!(await checkFirst())) return;
     const path = (TABS.find((t) => t[0] === tab) || [, , "/"])[2];
-    const w = window.open("", "gb-preview");
-    if (w) waitingPage(w, "Preparing your preview… this takes about a minute.");
+    const url = PREVIEW_BASE.replace(/\/$/, "") + path;
+    let w = window.open("", "gb-preview");
     try {
-      if (isDirty()) {
-        busy = "Saving…"; status();
-        await save();
-      }
-      busy = "Building the preview… (about a minute)"; status();
-      const r = await waitFor("preview", head, (s) => { busy = "Building the preview… " + s + "s"; status(); });
+      if (w && (!w.location.href || w.location.href === "about:blank")) waitingPage(w, "Preparing your preview…");
+    } catch {}
+    try {
+      busy = "Preparing preview…"; status();
+      const reg = await previewWorker();
+      if (!reg) throw new Error("This browser can't show the preview. Please use an up-to-date Chrome, Edge, Firefox or Safari.");
+      await buildPreview();
       busy = ""; status();
-      if (!r.ok) { if (w) w.close(); await buildTrouble(r, "preview"); return; }
-      lastPreviewOk = true;
-      const url = PREVIEW_URL + path + "?v=" + head.slice(0, 7);
-      $("#open-preview").href = url;
       if (w && !w.closed) { w.location.href = url; w.focus(); }
-      else await dialog({ title: "Preview is ready", body: "Your changes are on the preview site. If you like them, press Push.", buttons: [{ label: "Close", value: true }, { label: "Open preview ↗", href: url, primary: true, value: true }] });
-      toast("Preview ready — Greek version: add /el/ after the address");
+      else if (!(w = window.open(url, "gb-preview"))) {
+        await dialog({ title: "Preview is ready", body: "Your browser blocked the new tab.", buttons: [{ label: "Close", value: true }, { label: "Open preview ↗", href: url, primary: true, value: true }] });
+      }
+      $("#open-preview").href = url;
     } catch (err) {
       busy = ""; status();
-      if (w) w.close();
-      if (err.code === "conflict") {
-        await dialog({ title: "The site changed somewhere else", body: "Someone (probably Claude) changed the site while you were editing. Your changes are kept on this computer. Reload the editor and they will be offered back to you.", buttons: [{ label: "Reload", value: true, primary: true }] });
-        keepDraftNow(true);
-        location.reload();
-        return;
-      }
-      toast("Could not save: " + err.message, true);
+      try { if (w) w.close(); } catch {}
+      toast("Could not make the preview: " + err.message, true);
+      return;
     }
+    if (isDirty()) saveQuietly(); // keep the work safe on the server, without waiting
+  }
+
+  // Save in the background (after a preview). Push waits for it.
+  let saving = null;
+  function saveQuietly() {
+    if (saving) return saving;
+    saving = (async () => {
+      savingNow = true; status();
+      try {
+        await save();
+      } catch (err) {
+        if (err.code === "conflict") {
+          keepDraftNow(true);
+          await dialog({ title: "The site changed somewhere else", body: "The site was changed somewhere else (probably by Claude) while you were editing. Your changes are kept on this computer: reload the editor and they will be offered back to you.", buttons: [{ label: "Reload", value: true, primary: true }] });
+          saved = JSON.stringify(C);
+          location.reload();
+        } else {
+          toast("Your changes are only on this computer for now (" + err.message + "). Press Preview again to retry.", true);
+        }
+      } finally {
+        savingNow = false;
+        saving = null;
+        status();
+      }
+    })();
+    return saving;
   }
 
   function keepDraftNow(sameBaseless) {
@@ -1050,9 +1113,10 @@
     if (!(await checkFirst())) return;
     const msg = isDirty()
       ? ["You have changes you haven't previewed yet. They will go straight to giorgosbatzios.com.", "Publish everything now?"]
-      : ["Everything you saw in the preview will go live on giorgosbatzios.com.", "Publish now?"];
+      : ["Everything you saw in the preview will go live on giorgosbatzios.com. It takes about a minute.", "Publish now?"];
     if (!(await confirmBox("Push to the live site?", msg, "Push live"))) return;
     try {
+      if (saving) { busy = "Saving…"; status(); await saving; }
       if (isDirty()) { busy = "Saving…"; status(); await save(); }
       busy = "Publishing…"; status();
       const r = await call("publish", {});

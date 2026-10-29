@@ -15,7 +15,10 @@ Make the change, rebuild, check, commit and push. Keep replies short and non-tec
     SoundCloud track number or soundcloud.com link), `tech` (`m4l`/`arduino`/`plugins`, each project has `slug`,
     `cover`, `summary`, `download`, `blocks` of type p/h/ul/img/yt/link/mono), `selected` (home cards), `academic`, `cv`.
   - Roles are `{en, el}` pairs inside each item; reuse the same wording as existing items.
-- `source/build.py` — generates the static site. English at `/`, Greek at `/el/`. Don't change design unless asked.
+- `source/render.mjs` — ALL page templates (pure JS, runs in Node and in the browser). English at `/`, Greek at `/el/`.
+  Don't change design unless asked. GB EDITOR uses this same file for its instant preview, so preview = real site.
+- `source/build.py` → runs `node source/build.mjs` (writes `site/` from render.mjs) and then draws share cards with `ogcard.py`.
+  Always build with `python3 source/build.py`. Don't put page HTML in Python.
 - `source/assets/style.css`, `site.js`, `favicon.svg` — design and behaviour.
 - `source/assets/img/` — all images, self-hosted as WebP: `<key>.webp` (max 1800px) and `<key>-sm.webp` (max 700px, thumbnails).
   For NEW images: convert to WebP in both sizes with Pillow, save under `source/assets/img/<short-name>.webp` and
@@ -40,7 +43,8 @@ The owner's own editing app, same look as the site. Files: `source/editor/` (ind
 - API in worker.js: `GET /api/content` (syncs preview with main, returns content.json from preview), `POST /api/save`
   (one commit on `preview` with content.json + new images in `source/assets/img/`), `POST /api/publish` (merges preview → main,
   then fast-forwards preview), `POST /api/reset` (preview = main), `GET /api/status` (compares `version.txt` with a commit).
-- Preview button = save + wait for the preview build; Push button = publish + wait for the live build.
+- Preview button = instant: renders all pages in the browser with render.mjs into a cache that `sw.js` (service worker,
+  scope `/preview/` on the editor host) serves; then saves to `preview` in the background. Push = save + publish + wait for the live build.
 - The editor commits to the same `preview` branch Claude uses: always `git pull` first, and never force-push `preview` or `main`.
 - If you add a new kind of content to content.json, also add fields for it in editor.js so the owner can edit it.
 
