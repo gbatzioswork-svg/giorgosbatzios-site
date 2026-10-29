@@ -8,6 +8,8 @@
     "html_handling": "auto-trailing-slash"
   },
   "workers_dev": true,
+  // Draft copies: pushes to any branch other than main get their own preview address
+  "previews": {},
   "routes": [
     { "pattern": "giorgosbatzios.com", "custom_domain": true },
     { "pattern": "www.giorgosbatzios.com", "custom_domain": true }
