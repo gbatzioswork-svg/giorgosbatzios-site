@@ -226,34 +226,6 @@
   }
   if (reduce) return;
 
-  // Page titles "decode" from random characters into the real word
-  var glyphs = "ABCDEFGHIKLMNOPRSTUVXZΑΒΓΔΕΖΗΘΛΞΠΣΦΨΩ0123456789/#*+";
-  function scramble(el, duration) {
-    var text = el.textContent, start = null;
-    if (!text.trim()) return;
-    el.setAttribute("aria-label", text);
-    function step(ts) {
-      if (!start) start = ts;
-      var p = Math.min((ts - start) / duration, 1), out = "";
-      for (var i = 0; i < text.length; i++) {
-        var ch = text[i];
-        out += (ch === " " || i < Math.floor(p * text.length)) ? ch : glyphs[(Math.random() * glyphs.length) | 0];
-      }
-      el.textContent = out;
-      if (p < 1) requestAnimationFrame(step); else el.textContent = text;
-    }
-    requestAnimationFrame(step);
-  }
-  document.querySelectorAll(".page-head h1").forEach(function (h) { scramble(h, 650); });
-  document.querySelectorAll(".page-head .kicker, .sec-title h2").forEach(function (k) {
-    // section titles decode when they come into view
-    if (!("IntersectionObserver" in window)) return;
-    var once = new IntersectionObserver(function (es) {
-      es.forEach(function (en) { if (en.isIntersecting) { scramble(en.target.querySelector("a") || en.target, 500); once.disconnect(); } });
-    }, { threshold: 0.6 });
-    once.observe(k);
-  });
-
   if (!finePointer) return;
 
   // A small ring that follows the mouse and opens up over anything clickable
