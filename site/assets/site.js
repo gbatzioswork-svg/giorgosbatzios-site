@@ -14,7 +14,7 @@
     btn.addEventListener("click", function () {
       var open = nav.classList.toggle("open");
       btn.setAttribute("aria-expanded", open ? "true" : "false");
-      btn.textContent = open ? "Close" : "Menu";
+      btn.textContent = open ? btn.dataset.close : btn.dataset.open;
     });
   }
   // Close the desktop dropdown when clicking elsewhere
@@ -52,17 +52,45 @@
     });
   }
 
-  // Contact form: opens the visitor's email app with the message filled in
+  // Contact form: sends through Web3Forms when a key is set, otherwise opens the visitor's email app
   var form = document.getElementById("contact-form");
   if (form) {
+    var status = form.querySelector(".form-status");
+    var submit = form.querySelector("button[type=submit]");
     form.addEventListener("submit", function (e) {
       e.preventDefault();
       var name = form.elements.name.value.trim();
       var from = form.elements.email.value.trim();
       var msg = form.elements.message.value.trim();
-      var body = msg + "\n\n— " + name + (from ? " (" + from + ")" : "");
-      location.href = "mailto:" + form.dataset.to + "?subject=" +
-        encodeURIComponent("Website message from " + name) + "&body=" + encodeURIComponent(body);
+      if (!form.dataset.key) {
+        var body = msg + "\n\n— " + name + (from ? " (" + from + ")" : "");
+        location.href = "mailto:" + form.dataset.to + "?subject=" +
+          encodeURIComponent("Website message from " + name) + "&body=" + encodeURIComponent(body);
+        return;
+      }
+      if (form.elements.botcheck.checked) return;
+      submit.disabled = true;
+      status.className = "form-status";
+      status.textContent = form.dataset.sending;
+      fetch("https://api.web3forms.com/submit", {
+        method: "POST",
+        headers: { "Content-Type": "application/json", Accept: "application/json" },
+        body: JSON.stringify({
+          access_key: form.dataset.key,
+          subject: "Website message from " + name,
+          from_name: "giorgosbatzios.com",
+          name: name, email: from, replyto: from, message: msg,
+          page: location.href
+        })
+      }).then(function (r) { return r.json(); }).then(function (j) {
+        if (!j.success) throw new Error(j.message || "failed");
+        form.reset();
+        status.className = "form-status ok";
+        status.textContent = form.dataset.sent;
+      }).catch(function () {
+        status.className = "form-status err";
+        status.textContent = form.dataset.failed + " " + form.dataset.to;
+      }).finally(function () { submit.disabled = false; });
     });
   }
 })();
