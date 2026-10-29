@@ -256,3 +256,47 @@
     });
   });
 })();
+
+/* ================= click-to-zoom images ================= */
+(function () {
+  var figs = document.querySelectorAll(".zoomable");
+  if (!figs.length) return;
+  var lang = document.body.dataset.lang === "el" ? "el" : "en";
+  var closeLabel = lang === "el" ? "Κλείσιμο" : "Close";
+  var box = null, lastFocus = null;
+  function close() {
+    if (!box) return;
+    var b = box; box = null;
+    b.classList.remove("open");
+    document.removeEventListener("keydown", onKey);
+    setTimeout(function () { b.remove(); }, 260);
+    if (lastFocus) lastFocus.focus();
+  }
+  function onKey(e) { if (e.key === "Escape") close(); }
+  function open(img, cap) {
+    lastFocus = document.activeElement;
+    box = document.createElement("div");
+    box.className = "lightbox"; box.setAttribute("role", "dialog"); box.setAttribute("aria-modal", "true");
+    var big = document.createElement("img");
+    big.src = img.currentSrc || img.src; big.alt = img.alt;
+    var btn = document.createElement("button");
+    btn.type = "button"; btn.className = "lb-close"; btn.setAttribute("aria-label", closeLabel); btn.textContent = "×";
+    box.appendChild(big); box.appendChild(btn);
+    if (cap) { var fc = document.createElement("figcaption"); fc.textContent = cap; box.appendChild(fc); }
+    box.addEventListener("click", close);
+    document.addEventListener("keydown", onKey);
+    document.body.appendChild(box);
+    requestAnimationFrame(function () { box && box.classList.add("open"); });
+    btn.focus();
+  }
+  figs.forEach(function (f) {
+    var img = f.querySelector("img");
+    if (!img) return;
+    img.setAttribute("tabindex", "0");
+    img.setAttribute("role", "button");
+    var cap = f.querySelector("figcaption");
+    var go = function () { open(img, cap ? cap.textContent : ""); };
+    img.addEventListener("click", go);
+    img.addEventListener("keydown", function (e) { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); go(); } });
+  });
+})();

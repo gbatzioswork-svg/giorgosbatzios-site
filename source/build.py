@@ -3,6 +3,7 @@ English lives at /, Greek at /el/."""
 import html, json, os, shutil
 from datetime import date
 from content import *
+import ogcard
 
 HERE = os.path.dirname(os.path.abspath(__file__))
 OUT = os.path.join(HERE, "..", "site")
@@ -48,7 +49,13 @@ UI = {
     "sending": T("Sending…", "Αποστολή…"), "sent": T("Thank you. Your message was sent and I'll reply soon.", "Ευχαριστώ! Το μήνυμά σας στάλθηκε και θα απαντήσω σύντομα."),
     "failed": T("The message couldn't be sent. Please email me directly at", "Το μήνυμα δεν στάλθηκε. Στείλτε μου απευθείας email στο"),
     "notfound": T("This page doesn't exist.", "Αυτή η σελίδα δεν υπάρχει."), "home": T("Go to the home page", "Αρχική σελίδα"),
+    "video": T("video", "βίντεο"), "poster": T("Poster", "Αφίσα"), "photo": T("photo", "φωτογραφία"),
+    "zoom": T("Tap to enlarge", "Πατήστε για μεγέθυνση"), "close_img": T("Close", "Κλείσιμο"),
+    "nosignal": T("No signal.", "Δεν υπάρχει σήμα."),
 }
+
+
+NAME = {"en": "Giorgos Batzios", "el": "Γιώργος Μπάτζιος"}
 
 
 def u(key, lang):
@@ -66,7 +73,7 @@ def sq(url, w=1000):
 
 def yt(vid, title, lang):
     return (f'<div class="yt" data-id="{vid}" data-title="{e(title)}"><button type="button" aria-label="{u("play", lang)}: {e(title)}">'
-            f'<img src="https://i.ytimg.com/vi/{vid}/hqdefault.jpg" alt="" loading="lazy">'
+            f'<img src="https://i.ytimg.com/vi/{vid}/hqdefault.jpg" alt="{e(title)} — {u("video", lang)}" loading="lazy" decoding="async">'
             f'<span class="play"></span></button></div>')
 
 
@@ -116,9 +123,9 @@ PAGES = {}
 
 
 def person_ld():
-    return json.dumps({
-        "@context": "https://schema.org", "@type": "Person", "name": SITE["name"],
-        "alternateName": ["Georgios Batzios", "George Batzios"], "url": SITE["url"] + "/",
+    return {
+        "@type": "Person", "@id": SITE["url"] + "/#person", "name": SITE["name"],
+        "alternateName": ["Γιώργος Μπάτζιος", "Georgios Batzios", "George Batzios"], "url": SITE["url"] + "/",
         "image": SITE["url"] + sq(IMG["home1"], 1500), "jobTitle": "Sound Engineer",
         "description": "Audio and sound engineer and musician in Athens: theater sound, live mixing, studio recording, mixing, composing and music technology.",
         "email": "mailto:" + SITE["email"],
@@ -127,16 +134,40 @@ def person_ld():
                      {"@type": "EducationalOrganization", "name": "IEK AKMI"}],
         "knowsAbout": ["Sound engineering", "Live sound mixing", "Theater sound", "Qlab", "Ableton Live", "Max for Live", "Arduino", "Music production"],
         "sameAs": [s[1] for s in SOCIAL],
-    }, ensure_ascii=False)
+    }
 
 
-def page(path, lang, title, desc, body, og=None, ld=None):
-    """path is the language-neutral path, e.g. /theater/."""
-    full = f"{title} — {SITE['name']}" if title else f"{SITE['name']} — {L(SITE['role'], lang)}"
-    og = og or IMG["home1"]
+def crumb_ld(lang, crumbs):
+    items = [{"@type": "ListItem", "position": 1, "name": NAME[lang], "item": SITE["url"] + U(lang, "/")}]
+    for i, (n, p) in enumerate(crumbs, 2):
+        items.append({"@type": "ListItem", "position": i, "name": n, "item": SITE["url"] + U(lang, p)})
+    return {"@type": "BreadcrumbList", "itemListElement": items}
+
+
+def page(path, lang, title, desc, body, og=None, ld=None, kicker="", crumbs=None):
+    """path is the language-neutral path, e.g. /theater/. ld: list of schema.org objects."""
+    if title:
+        full = f"{title} — {NAME[lang]}"
+    elif lang == "el":
+        full = f"{NAME['el']} (Giorgos Batzios) — {L(SITE['role'], lang)}"
+    else:
+        full = f"{NAME['en']} — {L(SITE['role'], lang)}"
     other = "el" if lang == "en" else "en"
     url = SITE["url"] + U(lang, path)
-    ldtag = f'<script type="application/ld+json">{ld}</script>\n' if ld else ""
+    # share preview card for this page
+    full_path0 = U(lang, path)
+    slug = full_path0.strip("/").replace("/", "-") or "home"
+    card = f"/og/{slug}.png" if path != "/404/" else "/og/home.png"
+    if path != "/404/":
+        ogcard.make(os.path.join(OUT, card.lstrip("/")), title or NAME[lang], kicker,
+                    NAME[lang] if title else "giorgosbatzios.com", L(SITE["role"], lang))
+    graph = list(ld or [])
+    if path not in ("/", "/404/"):
+        graph.append(crumb_ld(lang, crumbs if crumbs is not None else [(title, path)]))
+    ldtag = ""
+    if graph:
+        ldtag = '<script type="application/ld+json">' + json.dumps({"@context": "https://schema.org", "@graph": graph}, ensure_ascii=False) + "</script>\n"
+    copy = f"© {date.today().year} {NAME[lang]}" + (" · Giorgos Batzios" if lang == "el" else "")
     doc = f"""<!doctype html>
 <html lang="{lang}">
 <head>
@@ -155,12 +186,15 @@ def page(path, lang, title, desc, body, og=None, ld=None):
 <meta property="og:title" content="{e(full)}">
 <meta property="og:description" content="{e(desc)}">
 <meta property="og:url" content="{url}">
-<meta property="og:image" content="{SITE['url']}{sq(og, 1500)}">
+<meta property="og:site_name" content="{NAME[lang]}">
+<meta property="og:image" content="{SITE['url']}{card}">
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="630">
+<meta property="og:image:alt" content="{e(full)}">
 <meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:image" content="{SITE['url']}{card}">
 <link rel="icon" href="/assets/favicon.svg" type="image/svg+xml">
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Geist:wght@400;500;550;600;650&family=Geist+Mono:wght@400;500&display=swap">
+<link rel="preload" href="/assets/fonts/geist-var.woff" as="font" type="font/woff" crossorigin>
 <link rel="stylesheet" href="/assets/style.css">
 {ldtag}</head>
 <body data-lang="{lang}">
@@ -179,7 +213,7 @@ def page(path, lang, title, desc, body, og=None, ld=None):
 </main>
 <footer class="site-foot"><div class="wrap foot-row">
 {socials_html()}
-<span class="copy">© {date.today().year} Giorgos Batzios</span>
+<span class="copy">{copy}</span>
 </div></footer>
 <script src="/assets/site.js" defer></script>
 </body>
@@ -221,7 +255,7 @@ def build_home(lang):
     idx = "".join(f'<a href="{U(lang, h)}"><span class="name">{n}</span><span class="meta">{m}</span></a>' for h, n, m in rows)
     fields = "".join(f"<li>{L(f, lang)}</li>" for f in SITE["fields"])
     sel = "".join(
-        f'<a class="sel" href="{U(lang, link)}"><div class="thumb"><img src="{sq(img, 800)}" alt="" loading="lazy" width="800" height="600"></div>'
+        f'<a class="sel" href="{U(lang, link)}"><div class="thumb"><img src="{sq(img, 800)}" alt="{e(title)}" loading="lazy" decoding="async" width="800" height="600"></div>'
         f'<div><p class="kicker">{L(k, lang)}</p><h3 lang="{"el" if title == "Αντιγόνη" else "en"}">{e(title)}</h3><p class="line">{L(line, lang)}</p></div></a>'
         for title, k, line, link, img in SELECTED)
     body = f"""
@@ -231,11 +265,11 @@ def build_home(lang):
       <h1 class="intro"><span class="ln"><span>Giorgos</span></span><span class="ln"><span class="dotted">Batzios</span></span></h1>
       <p class="role">{L(SITE['role'], lang)}</p>
     </div>
-    <img class="hero-img mask-squircle" src="{sq(IMG['home1'], 1200)}" alt="Giorgos Batzios" width="1200" height="1200">
+    <img class="hero-img mask-squircle" src="{sq(IMG['home1'], 1200)}" alt="{NAME[lang]} — {L(T('at the piano', 'στο πιάνο'), lang)}" width="1200" height="1200" fetchpriority="high">
   </section>
   <div class="wave-wrap" aria-hidden="true"><canvas class="wave"></canvas></div>
   <section class="split">
-    <img class="split-img mask-octagon" src="{sq(IMG['home2'], 1200)}" alt="Giorgos Batzios" loading="lazy" width="1000" height="1200">
+    <img class="split-img mask-octagon" src="{sq(IMG['home2'], 1200)}" alt="{NAME[lang]} — {L(T('at the mixing desk in the studio', 'στην κονσόλα του στούντιο'), lang)}" loading="lazy" decoding="async" width="1000" height="1200">
     <ul class="fields">{fields}</ul>
   </section>
   <section class="selected"><div class="sec-title"><h2>{u('selected', lang)}</h2></div><div class="sel-grid">{sel}</div></section>
@@ -243,7 +277,9 @@ def build_home(lang):
 </div>"""
     desc = L(T("Giorgos Batzios — audio and sound engineer, musician. Theater, live sound, studio recording, mixing and composing in Athens, Greece.",
                "Γιώργος Μπάτζιος — ηχολήπτης και μουσικός. Θέατρο, live ήχος, ηχογράφηση, μίξη και σύνθεση στην Αθήνα."), lang)
-    page("/", lang, "", desc, body, ld=person_ld())
+    website = {"@type": "WebSite", "name": NAME[lang], "url": SITE["url"] + U(lang, "/"), "inLanguage": lang,
+               "alternateName": ["Giorgos Batzios", "Γιώργος Μπάτζιος"]}
+    page("/", lang, "", desc, body, ld=[person_ld(), website])
 
 
 # ------------------------------------------------------------------ Theater
@@ -255,7 +291,7 @@ def build_theater(lang):
             last = yr
         rl = " · ".join(r if lang == "en" else ROLES[r] for r in roles)
         rows.append(f'''<a class="show" href="{e(link)}" target="_blank" rel="noopener">
-  <img src="{sq(img, 300)}" alt="" loading="lazy" width="76" height="76">
+  <img src="{sq(img, 300)}" alt="{u('poster', lang)}: {e(title)}" loading="lazy" decoding="async" width="76" height="76">
   <div><h3 lang="el">{e(title)}</h3><p class="venue">{e(L(venue, lang))}</p></div>
   <p class="roles">{e(rl)}</p>
   <span class="go">{ARROW}</span>
@@ -263,7 +299,13 @@ def build_theater(lang):
     lede = L(T("Sound mixing, lights and AV programming, and show operation for theater productions in Athens and on tour around Greece.",
                "Μίξη ήχου, προγραμματισμός φώτων και AV, και εκτέλεση παραστάσεων για θεατρικές παραγωγές στην Αθήνα και σε περιοδείες σε όλη την Ελλάδα."), lang)
     body = head(u("theater", lang), f"{len(THEATER)} {u('productions', lang)}", lede) + f'<div class="wrap">{"".join(rows)}</div>'
-    page("/theater/", lang, u("theater", lang), lede, body)
+    works = [{"@type": "ListItem", "position": i, "item": {
+        "@type": "CreativeWork", "name": t[1], "genre": L(T("Theatre", "Θέατρο"), lang), "dateCreated": str(t[0]),
+        "url": t[4], "image": SITE["url"] + sq(t[5], 1500), "locationCreated": L(t[2], lang),
+        "contributor": {"@id": SITE["url"] + "/#person"}, "description": ", ".join(r if lang == "en" else ROLES[r] for r in t[3])}}
+        for i, t in enumerate(sorted(THEATER, key=lambda t: -t[0]), 1)]
+    page("/theater/", lang, u("theater", lang), lede, body, kicker=f"{len(THEATER)} {u('productions', lang)}",
+         ld=[{"@type": "ItemList", "name": u("theater", lang), "itemListElement": works}])
 
 
 # ------------------------------------------------------------------ Studio
@@ -291,7 +333,14 @@ def build_studio(lang):
   {feat}
   <div class="grid">{cards}</div>
 </div>'''
-    page("/studio/", lang, "Studio", lede, body, IMG["studio"])
+    vids = [{"@type": "ListItem", "position": i, "item": {
+        "@type": "VideoObject", "name": st[0], "uploadDate": st[1],
+        "description": " · ".join(cat(c) for c in st[2]) + " — " + NAME[lang],
+        "thumbnailUrl": f"https://i.ytimg.com/vi/{st[3]}/hqdefault.jpg",
+        "embedUrl": f"https://www.youtube.com/embed/{st[3]}", "contentUrl": f"https://www.youtube.com/watch?v={st[3]}",
+        "contributor": {"@id": SITE["url"] + "/#person"}}} for i, st in enumerate([first] + rest, 1)]
+    page("/studio/", lang, "Studio", lede, body, kicker=f"{len(STUDIO)} {u('projects', lang)}",
+         ld=[{"@type": "ItemList", "name": "Studio", "itemListElement": vids}])
 
 
 # ------------------------------------------------------------------ Music
@@ -305,7 +354,7 @@ def build_music(lang):
     lede = L(T("Songs and sessions I wrote, played on or produced.", "Τραγούδια και sessions που έγραψα, έπαιξα ή έκανα την παραγωγή τους."), lang)
     body = head(u("music", lang), L(T("Composing, playing, producing", "Σύνθεση, εκτέλεση, παραγωγή"), lang), lede) + \
         f'<div class="wrap">{"".join(items)}</div>'
-    page("/music/", lang, u("music", lang), lede, body, IMG["music"])
+    page("/music/", lang, u("music", lang), lede, body, kicker=L(T("Composing, playing, producing", "Σύνθεση, εκτέλεση, παραγωγή"), lang))
 
 
 # ------------------------------------------------------------------ Music technology
@@ -321,7 +370,7 @@ def cards_for(base, items, lang):
     out = []
     for p in items:
         summ = f'<p>{e(L(p["summary"], lang))}</p>' if p["summary"] else ""
-        out.append(f'<a class="proj" href="{U(lang, base + p["slug"] + "/")}"><div class="thumb"><img src="{sq(p["cover"], 800)}" alt="" loading="lazy" width="800" height="600"></div>'
+        out.append(f'<a class="proj" href="{U(lang, base + p["slug"] + "/")}"><div class="thumb"><img src="{sq(p["cover"], 800)}" alt="{e(p["title"])}" loading="lazy" decoding="async" width="800" height="600"></div>'
                    f'<div><h3>{e(p["title"])}</h3>{summ}</div></a>')
     return "".join(out)
 
@@ -331,12 +380,13 @@ def build_tech(lang):
                    f'<div class="proj-grid">{cards_for(b, items, lang)}</div></section>' for b, k, _, items in SECTIONS)
     lede = L(T("Tools I build for Ableton Live, for the stage and for the mix.", "Εργαλεία που φτιάχνω για το Ableton Live, για τη σκηνή και για τη μίξη."), lang)
     body = head(u("tech_long", lang), "Max4Live, Arduino, plugins", lede) + f'<div class="wrap">{secs}</div>'
-    page("/music-technology/", lang, u("tech_long", lang), lede, body)
+    page("/music-technology/", lang, u("tech_long", lang), lede, body, kicker="Max4Live, Arduino, plugins")
 
     for base, key, lede, items in SECTIONS:
         title = u(key, lang)
         body = head(title, u("tech_long", lang), L(lede, lang)) + f'<div class="wrap"><div class="proj-grid">{cards_for(base, items, lang)}</div></div>'
-        page(base, lang, title, f"{title} — Giorgos Batzios. {L(lede, lang)}", body)
+        page(base, lang, title, f"{title} — {NAME[lang]}. {L(lede, lang)}", body, kicker=u("tech_long", lang),
+             crumbs=[(u("tech_long", lang), "/music-technology/"), (title, base)])
         for i in range(len(items)):
             build_project(base, title, items, i, lang)
 
@@ -352,7 +402,8 @@ def block(b, title, lang):
     if k == "img":
         cap = L(b[2], lang)
         fc = f"<figcaption>{e(cap)}</figcaption>" if cap else ""
-        return f'<figure><img src="{sq(b[1], 1500)}" alt="{e(cap)}" loading="lazy">{fc}</figure>'
+        alt = cap or f"{title} — {u('photo', lang)}"
+        return f'<figure class="zoomable"><img src="{sq(b[1], 1500)}" alt="{e(alt)}" loading="lazy" decoding="async">{fc}</figure>'
     if k == "yt":
         return yt(b[1], title, lang)
     if k == "link":
@@ -376,9 +427,23 @@ def build_project(base, sect, items, i, lang):
     summary = f'<p class="lede">{e(summ)}</p>' if summ else ""
     body = (f'<header class="wrap page-head"><p class="kicker"><a href="{U(lang, base)}">← {sect}</a></p><h1 class="dotted">{e(p["title"])}</h1>{summary}</header>'
             f'<div class="wrap"><div class="article">'
-            f'<figure class="cover"><img src="{sq(p["cover"], 1500)}" alt="{e(p["title"])}"></figure>'
+            f'<figure class="cover zoomable"><img src="{sq(p["cover"], 1500)}" alt="{e(p["title"])}"></figure>'
             f'{dl}{blocks}</div><nav class="pager" aria-label="{u("projects", lang)}">{left}{right}</nav></div>')
-    page(base + p["slug"] + "/", lang, p["title"], f"{p['title']} — {summ or sect} · Giorgos Batzios", body, p["cover"])
+    path = base + p["slug"] + "/"
+    if base == "/arduino-projects/":
+        item = {"@type": "CreativeWork", "name": p["title"], "description": summ or sect, "image": SITE["url"] + sq(p["cover"], 1500),
+                "author": {"@id": SITE["url"] + "/#person"}, "url": SITE["url"] + U(lang, path), "inLanguage": lang}
+    else:
+        item = {"@type": "SoftwareApplication", "name": p["title"], "description": summ or sect,
+                "applicationCategory": "MultimediaApplication",
+                "applicationSubCategory": "Max for Live device" if base == "/max4live-devices/" else "Audio plugin",
+                "operatingSystem": "Ableton Live (Max for Live)" if base == "/max4live-devices/" else "Windows, macOS",
+                "image": SITE["url"] + sq(p["cover"], 1500), "author": {"@id": SITE["url"] + "/#person"}, "url": SITE["url"] + U(lang, path),
+                "offers": {"@type": "Offer", "price": "0", "priceCurrency": "EUR"}}
+        if p.get("download"):
+            item["downloadUrl"] = p["download"][0]
+    page(path, lang, p["title"], f"{p['title']} — {summ or sect} · {NAME[lang]}", body, kicker=sect, ld=[item],
+         crumbs=[(u("tech_long", lang), "/music-technology/"), (sect, base), (p["title"], path)])
 
 
 # ------------------------------------------------------------------ Academic
@@ -390,12 +455,12 @@ def build_academic(lang):
             links.append(f'<a class="ext" href="{e(video)}" target="_blank" rel="noopener">{u("watch", lang) if "youtube" in video else u("files", lang)}{ARROW}</a>')
         links += [f'<a class="ext" href="{e(l_url)}" target="_blank" rel="noopener">{e(L(lbl, lang))}{ARROW}</a>' for lbl, l_url in reports]
         main = video or (reports[0][1] if reports else "#")
-        cards.append(f'<article class="acad"><a class="thumb" href="{e(main)}" target="_blank" rel="noopener" tabindex="-1"><img src="{sq(thumb, 800)}" alt="" loading="lazy" width="800" height="450"></a>'
+        cards.append(f'<article class="acad"><a class="thumb" href="{e(main)}" target="_blank" rel="noopener" tabindex="-1"><img src="{sq(thumb, 800)}" alt="{e(L(t, lang))}" loading="lazy" decoding="async" width="800" height="450"></a>'
                      f'<div><p class="kicker">{e(L(inst, lang))}</p><h3 style="margin-top:4px">{e(L(t, lang))}</h3></div><div class="links">{"".join(links)}</div></article>')
     lede = L(T("Coursework, live performances and final projects from my studies.", "Εργασίες, live performances και τελικά projects από τις σπουδές μου."), lang)
     body = head(u("academic_long", lang), L(T("Metropolitan College, AKMI Institution", "Μητροπολιτικό Κολλέγιο, ΙΕΚ ΑΚΜΗ"), lang), lede) + \
         f'<div class="wrap"><div class="grid">{"".join(cards)}</div></div>'
-    page("/academic-portfolio/", lang, u("academic_long", lang), lede, body)
+    page("/academic-portfolio/", lang, u("academic_long", lang), lede, body, kicker=L(T("Metropolitan College · AKMI", "Μητροπολιτικό Κολλέγιο · ΙΕΚ ΑΚΜΗ"), lang))
 
 
 # ------------------------------------------------------------------ CV
@@ -433,7 +498,8 @@ def build_cv(lang):
 </div>'''
     desc = L(T("CV of Giorgos Batzios, sound and audio engineer: theater, live and studio experience, education and certifications.",
                "Βιογραφικό του Γιώργου Μπάτζιου, ηχολήπτη: εμπειρία σε θέατρο, live και στούντιο, σπουδές και πιστοποιήσεις."), lang)
-    page("/curriculum-vitae/", lang, u("cv_long", lang), desc, body)
+    page("/curriculum-vitae/", lang, u("cv_long", lang), desc, body, kicker=L(T("Sound / audio engineer", "Ηχολήπτης / sound engineer"), lang),
+         ld=[{"@type": "ProfilePage", "name": u("cv_long", lang), "inLanguage": lang, "mainEntity": person_ld()}])
 
 
 # ------------------------------------------------------------------ Contact
@@ -459,17 +525,25 @@ def build_contact(lang):
     </form>
     <div style="margin-top:44px">{socials_html()}</div>
   </div>
-  <img class="photo mask-squircle" src="{sq(IMG['contact'], 1000)}" alt="Giorgos Batzios" loading="lazy" width="750" height="1123">
+  <img class="photo mask-squircle" src="{sq(IMG['contact'], 1000)}" alt="{NAME[lang]}" loading="lazy" decoding="async" width="750" height="1123">
 </div>'''
     desc = L(T("Contact Giorgos Batzios for theater sound, live sound, recording and mixing.",
                "Επικοινωνήστε με τον Γιώργο Μπάτζιο για ήχο θεάτρου, live, ηχογράφηση και μίξη."), lang)
-    page("/contact/", lang, u("contact", lang), desc, body, IMG["contact"])
+    page("/contact/", lang, u("contact", lang), desc, body, kicker=u("athens_gr", lang),
+         ld=[{"@type": "ContactPage", "name": u("contact", lang), "inLanguage": lang, "about": {"@id": SITE["url"] + "/#person"}}])
 
 
 # ------------------------------------------------------------------ extras
 def build_extras():
-    page("/404/", "en", "Page not found", "Page not found.",
-         head("Not found", "Error 404", f'{u("notfound", "en")} <a href="/">{u("home", "en")}</a> · <a href="/el/">{u("home", "el")}</a>'))
+    body404 = (
+        '<section class="wrap nf">'
+        '<p class="kicker">Error 404</p>'
+        '<h1 class="dotted">No signal</h1>'
+        '<div class="flat" aria-hidden="true"><span></span></div>'
+        f'<p class="lede">{u("notfound", "en")}<br><span lang="el">{u("notfound", "el")}</span></p>'
+        f'<p class="nf-links"><a class="btn" href="/">{u("home", "en")}</a> <a class="btn ghost" href="/el/" lang="el">{u("home", "el")}</a></p>'
+        '</section>')
+    page("/404/", "en", "Page not found", "Page not found.", body404)
     shutil.move(os.path.join(OUT, "404", "index.html"), os.path.join(OUT, "404.html"))
     os.rmdir(os.path.join(OUT, "404"))
     # Redirects from old Squarespace addresses
@@ -493,6 +567,13 @@ def build_extras():
     open(os.path.join(OUT, "sitemap.xml"), "w").write(
         '<?xml version="1.0" encoding="UTF-8"?><urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9" '
         f'xmlns:xhtml="http://www.w3.org/1999/xhtml">{"".join(urls)}</urlset>\n')
+    open(os.path.join(OUT, "_headers"), "w").write(
+        "/assets/img/*\n  Cache-Control: public, max-age=31536000, immutable\n"
+        "/assets/fonts/*\n  Cache-Control: public, max-age=31536000, immutable\n"
+        "/og/*\n  Cache-Control: public, max-age=604800\n"
+        "/assets/*.css\n  Cache-Control: public, max-age=3600\n"
+        "/assets/*.js\n  Cache-Control: public, max-age=3600\n"
+        "/*\n  X-Content-Type-Options: nosniff\n  Referrer-Policy: strict-origin-when-cross-origin\n")
     open(os.path.join(OUT, "robots.txt"), "w").write(f"User-agent: *\nAllow: /\nSitemap: {SITE['url']}/sitemap.xml\n")
 
 

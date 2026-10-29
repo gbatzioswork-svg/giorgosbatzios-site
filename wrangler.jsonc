@@ -2,8 +2,11 @@
   // Cloudflare Workers static site: serves everything in ./site
   "name": "giorgosbatzios",
   "compatibility_date": "2026-09-01",
+  "main": "worker.js",
   "assets": {
     "directory": "./site",
+    "binding": "ASSETS",
+    "run_worker_first": true,
     "not_found_handling": "404-page",
     "html_handling": "auto-trailing-slash"
   },
