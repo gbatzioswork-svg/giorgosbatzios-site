@@ -150,11 +150,11 @@ async function hasUnpublished(env) {
   return (cmp.ahead_by || 0) > 0 && (cmp.files || []).length > 0;
 }
 
-async function siteVersion(base) {
+// Which commit the files of THIS deployment were built from (a Worker can't fetch its own workers.dev / custom domains).
+async function ownVersion(env) {
   try {
-    const r = await fetch(base + "/version.txt?t=" + Date.now(), { cf: { cacheTtl: 0 }, headers: { "Cache-Control": "no-cache" } });
-    if (!r.ok) return "";
-    return (await r.text()).trim();
+    const r = await env.ASSETS.fetch(new Request("https://assets.local/version.txt"));
+    return r.ok ? (await r.text()).trim() : "";
   } catch {
     return "";
   }
@@ -249,21 +249,26 @@ async function api(request, env, url) {
   }
 
   // ---- is the preview / live site built from this commit yet?
+  // Live: this Worker's own files tell us. Preview: Cloudflare reports each build back to GitHub as a check run.
   if (route === "status" && request.method === "GET") {
     const target = url.searchParams.get("target") === "live" ? "live" : "preview";
     const commit = url.searchParams.get("commit") || "";
-    const version = await siteVersion(target === "live" ? LIVE_URL : PREVIEW_URL);
-    if (commit && version === commit) return json({ ready: true });
-    let failed = false, link = "";
-    if (commit) {
-      try {
-        const runs = (await gh(env, "/commits/" + commit + "/check-runs")).data.check_runs || [];
-        const mine = runs.filter((r) => (target === "preview") === (r.details_url || "").includes("/previews/"));
-        const bad = mine.find((r) => r.status === "completed" && r.conclusion && r.conclusion !== "success");
-        if (bad) { failed = true; link = bad.details_url || ""; }
-      } catch { /* the token may not be allowed to read checks; the version file is enough */ }
+    if (!commit) return json({ ready: false, failed: false });
+    if (target === "live" && (await ownVersion(env)) === commit) return json({ ready: true });
+    let runs = [];
+    try {
+      runs = (await gh(env, "/commits/" + commit + "/check-runs?per_page=50")).data.check_runs || [];
+    } catch { /* not reported yet */ }
+    const mine = runs.filter((r) => (target === "preview") === (r.details_url || "").includes("/previews/"));
+    const bad = mine.find((r) => r.status === "completed" && r.conclusion && !["success", "neutral", "skipped"].includes(r.conclusion));
+    if (bad) return json({ ready: false, failed: true, link: bad.details_url || "" });
+    const ok = mine.find((r) => r.status === "completed" && r.conclusion === "success");
+    if (ok) {
+      // give the new files a few seconds to reach every Cloudflare location
+      const done = Date.parse(ok.completed_at || "") || 0;
+      return json({ ready: Date.now() - done > (target === "preview" ? 8000 : 45000) });
     }
-    return json({ ready: false, failed, link, version });
+    return json({ ready: false, failed: false });
   }
 
   return json({ error: "not_found" }, 404);
