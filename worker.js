@@ -33,6 +33,14 @@ export default {
     }
     const editorHost = url.hostname.startsWith("editor.");
     const editorPath = url.pathname === "/editor" || url.pathname.startsWith("/editor/");
+    if (editorHost && url.pathname.startsWith("/preview/")) {
+      // the instant preview lives in the editor's browser; reaching the server means it isn't there (yet)
+      return new Response('<!doctype html><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Preview — GB EDITOR</title>' +
+        '<body style="margin:0;background:#0d0d0e;color:#f3f3f4;font:16px/1.5 system-ui,sans-serif;display:grid;place-items:center;min-height:100vh;text-align:center">' +
+        '<div><p style="font-weight:650;letter-spacing:.08em">GB EDITOR<span style="color:#b9472f">●</span></p><p style="color:#9d9da3">Open the editor and press Preview.</p>' +
+        '<p><a href="/" style="color:#f3f3f4">Open GB EDITOR</a></p></div>',
+        { status: 404, headers: { "Content-Type": "text/html; charset=utf-8", "Cache-Control": "no-store", "X-Robots-Tag": "noindex, nofollow" } });
+    }
     if (editorHost || editorPath) {
       if (editorHost && !url.pathname.startsWith("/assets/") && !editorPath) {
         url.pathname = "/editor" + url.pathname;
