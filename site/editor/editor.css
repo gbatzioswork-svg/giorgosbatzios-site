@@ -52,7 +52,8 @@ p { margin: 0; }
 .icon-btn.danger:hover { color: #ff8f7a; border-color: #ff8f7a; }
 
 /* ---------- login / boot ---------- */
-.login, .boot { min-height: 100vh; display: grid; place-items: center; padding: 24px; text-align: center; }
+.login, .boot { min-height: 100vh; display: grid; place-items: center; align-content: center; gap: 14px; padding: 24px; text-align: center; }
+.boot .muted { max-width: 46ch; }
 .boot .brand, .login .brand { font-size: 28px; }
 .login-box { width: min(360px, 100%); display: grid; gap: 14px; text-align: left; }
 .login-box .brand { text-align: center; }
