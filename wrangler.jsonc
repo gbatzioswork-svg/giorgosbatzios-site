@@ -4,8 +4,8 @@
   "compatibility_date": "2026-09-01",
   "main": "worker.js",
   // Every deploy (live and preview) first rebuilds ./site from source/content.json,
-  // so edits saved by GB EDITOR always show up. Pillow is only needed for the share-preview cards.
-  "build": { "command": "pip install -q pillow; python3 source/build.py" },
+  // so edits saved by GB EDITOR always show up. Pillow (share-preview cards) is only installed for the live site, to keep previews fast.
+  "build": { "command": "if [ \"$WORKERS_CI_BRANCH\" = \"main\" ]; then pip install -q pillow; fi; python3 source/build.py" },
   "assets": {
     "directory": "./site",
     "binding": "ASSETS",
