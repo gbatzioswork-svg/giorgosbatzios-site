@@ -335,8 +335,8 @@
    "el": "{n} έργα"
   },
   "theater_lede": {
-   "en": "Sound mixing, lights and AV programming, and show operation for theater productions in Athens and on tour around Greece.",
-   "el": "Μίξη ήχου, προγραμματισμός φώτων και AV, και εκτέλεση παραστάσεων για θεατρικές παραγωγές στην Αθήνα και σε περιοδείες σε όλη την Ελλάδα."
+   "en": "Sound mixing, lights, AV programming and show operation for theater productions in Athens and on tour around Greece.",
+   "el": "Μίξη ήχου, προγραμματισμός φώτων, AV και εκτέλεση παραστάσεων για θεατρικές παραγωγές στην Αθήνα και σε περιοδείες σε όλη την Ελλάδα."
   },
   "theater_genre": {
    "en": "Theatre",
@@ -397,6 +397,114 @@
  },
  "theater": [
   {
+   "year": 2026,
+   "title": "Η ΚΑΡΥΑΤΙΔΑ! Θέατρο Κάππα",
+   "venue": {
+    "en": "Θέατρο Κάππα",
+    "el": "Kappa Theater"
+   },
+   "roles": [
+    {
+     "en": "Sound mixing",
+     "el": "Μίξη ήχου"
+    },
+    {
+     "en": "Qlab programming",
+     "el": "Προγραμματισμός Qlab"
+    },
+    {
+     "en": "Projection mapping",
+     "el": "Projection mapping"
+    },
+    {
+     "en": "Run",
+     "el": "Εκτέλεση παράστασης"
+    }
+   ],
+   "link": "https://www.more.com/gr-el/tickets/theater/i-karyatida-2os-xronos/",
+   "poster": "/assets/img/theater-8h43a.webp"
+  },
+  {
+   "year": 2026,
+   "title": "ΜΕΓΑΣ ΑΛΕΞΑΝΔΡΟΣ της Κάρμεν Ρουγγέρη",
+   "venue": {
+    "en": "Christmas Theater",
+    "el": "Christmas Theater"
+   },
+   "roles": [
+    {
+     "en": "Qlab programming",
+     "el": "Προγραμματισμός Qlab"
+    },
+    {
+     "en": "Run",
+     "el": "Εκτέλεση παράστασης"
+    }
+   ],
+   "link": "https://www.more.com/gr-el/tickets/theater/children/megas-aleksandros-tis-karmen-rouggeri/",
+   "poster": "/assets/img/theater-megas-alexandros-tis-karmen-royg-8g2t6.webp"
+  },
+  {
+   "year": 2026,
+   "title": "Η ευτυχία της Αργιθέας",
+   "venue": {
+    "en": "Argithea",
+    "el": "Αργιθέα"
+   },
+   "roles": [
+    {
+     "en": "Sound mixing",
+     "el": "Μίξη ήχου"
+    },
+    {
+     "en": "Run",
+     "el": "Εκτέλεση παράστασης"
+    }
+   ],
+   "link": "https://www.athinorama.gr/theatre/performance/i_eutuxia_tis_argitheas__ftuxo_i_argitheatissa-10090006/",
+   "poster": "/assets/img/theater-https-www-athinorama-gr-theatre--8n668.webp"
+  },
+  {
+   "year": 2026,
+   "title": "Η ΚΑΡΥΑΤΙΔΑ! Tour",
+   "venue": {
+    "en": "Greek tour",
+    "el": "Περιοδεία"
+   },
+   "roles": [
+    {
+     "en": "Sound mixing",
+     "el": "Μίξη ήχου"
+    },
+    {
+     "en": "Qlab programming",
+     "el": "Προγραμματισμός Qlab"
+    },
+    {
+     "en": "Run",
+     "el": "Εκτέλεση παράστασης"
+    }
+   ],
+   "link": "https://www.more.com/gr-el/tickets/theater/i-karyatida-tou-giorgou-kapoutzidi-periodeia/",
+   "poster": "/assets/img/theater-i-karyatida-8bqr2.webp"
+  },
+  {
+   "year": 2026,
+   "title": "ΣΤΡΑΚΑΣΤΡΟΥΚΕΣ",
+   "venue": {
+    "en": "Greek Tour",
+    "el": "Περιοδία"
+   },
+   "roles": [
+    {
+     "en": "Lights programming",
+     "el": "Προγραμματισμός φώτων"
+    }
+   ],
+   "link": "https://www.more.com/gr-el/tickets/theater/strakastroukes-4os-xronos/",
+   "poster": "/assets/img/theater-8kc6f.webp"
+  },
+  {
    "year": 2025,
    "title": "Οι Θεοί του Ολύμπου",
    "venue": {
@@ -418,7 +526,7 @@
   },
   {
    "year": 2025,
-   "title": "Ο Γιάννης το Βόδι",
+   "title": "Ο Γιάννης το Βούδι",
    "venue": {
     "en": "Michael Cacoyannis Foundation",
     "el": "Ίδρυμα Μιχάλης Κακογιάννης"
@@ -1794,7 +1902,7 @@
   "plugins": {
    "lede": {
     "en": "Audio plugins for mixing and spatial sound.",
-    "el": "Audio plugins για μίξη και χωρικό ήχο."
+    "el": "Audio plugins για μίξη."
    },
    "items": [
     {
@@ -2035,6 +2143,58 @@
   "work": [
    {
     "title": {
+     "en": "Kappa Theater",
+     "el": "Θέατρο Κάππα"
+    },
+    "kind": {
+     "en": "Theater venue",
+     "el": "Θέατρο"
+    },
+    "org": {
+     "en": "Roadies",
+     "el": "Roadies"
+    },
+    "place": {
+     "en": "Athens",
+     "el": "Αθήνα"
+    },
+    "when": {
+     "en": "Oct 2026 - Today",
+     "el": "Οκτ 2026 - σήμερα"
+    },
+    "desc": {
+     "en": "Sound mixing for the theater comedy Η ΚΑΡΥΑΤΙΔΑ, Audio-visual cues programming. Audio-visual equipment setup and operation.",
+     "el": "Μίξη ήχου την παράσταση Η ΚΑΡΥΑΤΙΔΑ. Προγραμματισμός οπτικοακουστικών cues. Στήσιμο και χειρισμός οπτικοακουστικού εξοπλισμού."
+    }
+   },
+   {
+    "title": {
+     "en": "Theatrical Tour 2026",
+     "el": "Θεατρική περιοδεία 2026"
+    },
+    "kind": {
+     "en": "",
+     "el": ""
+    },
+    "org": {
+     "en": "Roadies",
+     "el": "Roadies"
+    },
+    "place": {
+     "en": "Greece",
+     "el": "Ελλάδα"
+    },
+    "when": {
+     "en": "Jul 2026 – Sep 2026",
+     "el": "Ιούλ 2026 – Σεπ 2026"
+    },
+    "desc": {
+     "en": "Sound mixing and audio equipment operation, theatrical tour for 34 venues in Greece.",
+     "el": "Μίξη ήχου και χειρισμός ηχητικού εξοπλισμού, θεατρική περιοδεία σε 32 χώρους στην Ελλάδα."
+    }
+   },
+   {
+    "title": {
      "en": "Christmas Theater",
      "el": "Christmas Theater"
     },
@@ -2051,8 +2211,8 @@
      "el": "Αθήνα"
     },
     "when": {
-     "en": "May 2025 – Today",
-     "el": "Μάιος 2025 – Σήμερα"
+     "en": "May 2025 – Jul 2026",
+     "el": "Μάιος 2025 – Ιούλιος 2026"
     },
     "desc": {
      "en": "Sound mixing for theatrical shows and live music shows. Audio-visual cues programming. Audio-visual equipment setup and operation.",
@@ -2064,7 +2224,10 @@
      "en": "Theatrical Tour 2025",
      "el": "Θεατρική περιοδεία 2025"
     },
-    "kind": null,
+    "kind": {
+     "en": "",
+     "el": ""
+    },
     "org": {
      "en": "Roadies",
      "el": "Roadies"
@@ -2113,7 +2276,10 @@
      "en": "Theatrical Tour 2024",
      "el": "Θεατρική περιοδεία 2024"
     },
-    "kind": null,
+    "kind": {
+     "en": "",
+     "el": ""
+    },
     "org": {
      "en": "Athenian Theaters",
      "el": "Athenian Theaters"
@@ -2295,6 +2461,10 @@
    }
   ],
   "certifications": [
+   {
+    "name": "EOPPEP sound engineering",
+    "org": "EOPPEP"
+   },
    {
     "name": "Dante Levels 1, 2 and 3",
     "org": "Audinate"
