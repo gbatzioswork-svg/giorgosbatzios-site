@@ -15,7 +15,7 @@
   const pending = new Map();    // "/assets/img/x.webp" -> data URL of a new picture made in this session
   const sent = new Set();       // pictures already saved to the preview
   const openItems = new WeakSet();
-  const newItems = new WeakSet();
+  let newItems = new WeakSet();
   let tab = "home";
   try { tab = sessionStorage.getItem("gb-tab") || "home"; } catch {}
 
@@ -31,10 +31,9 @@
     ["contact", "Contact", "/contact/"],
     ["texts", "All texts", "/"],
   ];
-  const PAGES = [
-    ["/", "Home"], ["/theater/", "Theater"], ["/studio/", "Studio"], ["/music/", "Music"],
-    ["/music-technology/", "Music Technology"], ["/max4live-devices/", "Max for Live devices"],
-    ["/arduino-projects/", "Arduino projects"], ["/daw-plugins/", "DAW plugins"],
+  const pages = () => [
+    ["/", "Home"], ["/theater/", "Theater"], ["/studio/", "Studio"], ["/music/", "Music"], ["/music-technology/", "Music Technology"],
+    ...((C && C.tech) || []).map((t) => [t.path, "Music Technology › " + (L(t.name) || "New category")]),
     ["/curriculum-vitae/", "CV"], ["/academic-portfolio/", "Academic portfolio"], ["/contact/", "Contact"],
   ];
 
@@ -634,7 +633,7 @@
           textField(s, "title", "Title (same in both languages)"),
           biField(s, "kicker", "Small line above the title", { placeholder: { en: "Theater · Venue, 2025", el: "Θέατρο · Χώρος, 2025" } }),
           biField(s, "line", "Short description"),
-          field("Opens page", h("select", { onchange: (e) => { s.link = e.target.value; changed(); } }, PAGES.map(([p, n]) => h("option", { value: p, selected: s.link === p }, n)))),
+          field("Opens page", h("select", { onchange: (e) => { s.link = e.target.value; changed(); } }, pages().map(([p, n]) => h("option", { value: p, selected: s.link === p }, n)))),
           imgField(s, "image", "Picture", () => "selected-" + slug(s.title)),
         ],
       }),
@@ -737,25 +736,71 @@
       }));
   }
 
-  // ------------------------------------------------------------------ MUSIC TECHNOLOGY (projects with their own pages)
-  const TECH = [["m4l", "Max for Live devices", "/max4live-devices/"], ["arduino", "Arduino projects", "/arduino-projects/"], ["plugins", "DAW plugins", "/daw-plugins/"]];
-  let techSub = "m4l";
+  // ------------------------------------------------------------------ MUSIC TECHNOLOGY (categories → projects, each with its own page)
+  const KINDS = [["project", "Projects"], ["m4l", "Max for Live devices (software)"], ["plugin", "Audio plugins (software)"]];
+  const RESERVED = ["theater", "studio", "music", "music-technology", "curriculum-vitae", "academic-portfolio", "contact", "el", "assets", "og", "editor", "preview", "api", "404", "cart"];
+  let techSub = 0;
+  function sectionPath(sec, name) {
+    const used = new Set(C.tech.filter((t) => t !== sec).map((t) => t.path.replace(/\//g, "")));
+    let s = slug(name) || "category", n = 2;
+    const base = s;
+    while (used.has(s) || RESERVED.includes(s)) s = base + "-" + n++;
+    return "/" + s + "/";
+  }
   function tabTech() {
-    const sub = h("div", { class: "tabs", style: "padding:0;margin:0 0 8px" }, TECH.map(([k, n]) =>
-      h("button", { type: "button", "aria-current": k === techSub ? "true" : "false", onclick: () => { techSub = k; render(); } }, n)));
-    const [key, name, path] = TECH.find((t) => t[0] === techSub);
-    const sec = C.tech[key];
-    const taken = () => new Set(TECH.flatMap(([k]) => C.tech[k].items.map((p) => p.slug)));
-    return page("Music Technology", "Each project gets its own page with text, pictures and videos.",
-      group("Overview page texts", T("tech_kicker", "Small label"), T("tech_lede", "Intro text", { multi: true })),
-      h("section", { class: "group" }, sub, h("div", { class: "panel" }, biField(sec, "lede", name + " — intro text", { multi: true }))),
+    if (techSub >= C.tech.length) techSub = Math.max(0, C.tech.length - 1);
+    const sec = C.tech[techSub];
+    const addCat = () => {
+      const t = { path: "", name: bi(), lede: bi(), kind: "project", items: [] };
+      t.path = sectionPath(t, "new-category");
+      newItems.add(t);
+      C.tech.push(t);
+      techSub = C.tech.length - 1;
+      changed();
+      render();
+      requestAnimationFrame(() => { const f = document.querySelector("#cat-panel input"); if (f) { f.scrollIntoView({ block: "center", behavior: "smooth" }); f.focus({ preventScroll: true }); } });
+    };
+    const sub = h("div", { class: "tabs", style: "padding:0;margin:0 0 10px;flex-wrap:wrap" },
+      C.tech.map((t, i) => h("button", { type: "button", "aria-current": i === techSub ? "true" : "false", onclick: () => { techSub = i; render(); } }, L(t.name) || "New category")),
+      h("button", { type: "button", class: "btn small", style: "margin-left:6px", onclick: addCat }, "+ Add category"));
+    const kids = [
+      page("Music Technology", "Categories appear in the Music Technology menu, each with its own page of projects. Every project gets its own page with text, pictures and videos.",
+        group("Overview page texts", biField(C.ui, "overview", "Menu name of the overview page"), T("tech_kicker", "Small label"), T("tech_lede", "Intro text", { multi: true }))),
+      h("section", { class: "group" }, h("h2", {}, h("span", {}, "Categories (" + C.tech.length + ")")), sub),
+    ];
+    if (!sec) return [...kids.flat(), h("p", { class: "note" }, "No categories yet. Press “+ Add category”.")];
+    const isNew = newItems.has(sec);
+    const addr = h("span", { class: "note" }, "Page address: giorgosbatzios.com" + sec.path + (isNew ? "  (follows the English name)" : ""));
+    const nameField = biField(sec, "name", "Category name (as it shows in the menu)", { placeholder: { en: "e.g. Sound installations", el: "π.χ. Ηχητικές εγκαταστάσεις" } });
+    if (isNew) nameField.querySelector('input[lang="en"]').addEventListener("input", (e) => {
+      sec.path = sectionPath(sec, e.target.value);
+      addr.textContent = "Page address: giorgosbatzios.com" + sec.path + "  (follows the English name)";
+    });
+    const i = techSub;
+    const panel = h("div", { class: "panel", id: "cat-panel" },
+      nameField, addr,
+      biField(sec, "lede", "Intro text of the category page", { multi: true }),
+      field("Type of projects (for Google)", h("select", { onchange: (e) => { sec.kind = e.target.value; changed(); } },
+        KINDS.map(([k, n]) => h("option", { value: k, selected: (sec.kind || "project") === k }, n)))),
+      h("div", { class: "add-row" },
+        h("button", { type: "button", class: "btn small", disabled: i === 0, onclick: () => { [C.tech[i - 1], C.tech[i]] = [C.tech[i], C.tech[i - 1]]; techSub = i - 1; changed(); render(); } }, "← Move earlier in the menu"),
+        h("button", { type: "button", class: "btn small", disabled: i === C.tech.length - 1, onclick: () => { [C.tech[i + 1], C.tech[i]] = [C.tech[i], C.tech[i + 1]]; techSub = i + 1; changed(); render(); } }, "Move later →"),
+        h("button", { type: "button", class: "btn small ghost danger", onclick: async () => {
+          const n = sec.items.length;
+          if (await confirmBox("Delete this category?", "“" + (L(sec.name) || "New category") + "”" + (n ? " and its " + n + " project page" + (n > 1 ? "s" : "") : "") + " will be removed from the site (after Push).", "Delete", true)) {
+            C.tech.splice(i, 1); techSub = Math.max(0, i - 1); changed(); render();
+          }
+        } }, "Delete category")));
+    const path = sec.path;
+    const taken = () => new Set(sec.items.map((p) => p.slug));
+    return [...kids.flat(), h("section", { class: "group" }, panel),
       list({
-        arr: sec.items, title: name, addLabel: "Add project",
+        arr: sec.items, title: "Projects in " + (L(sec.name) || "this category"), addLabel: "Add project",
         head: (p) => ({ title: p.title, sub: L(p.summary) || "giorgosbatzios.com" + path + (p.slug || "…") + "/", thumb: p.cover }),
         make: () => ({ slug: "", title: "", cover: "", summary: bi(), download: { url: "", label: bi("Download", "Λήψη") }, blocks: [{ type: "p", text: bi() }] }),
         body: (p) => {
           const addr = h("span", { class: "note" }, "Page address: giorgosbatzios.com" + path + (p.slug || "…") + "/");
-          const fixed = !!p.old; // pages that already exist keep their address
+          const fixed = !!p.old || !!(p.slug && !newItems.has(p)); // pages that already exist keep their address
           return [
             textField(p, "title", "Project name", { onchange: (v) => {
               if (fixed) return;
@@ -775,7 +820,7 @@
             blocksEditor(p),
           ];
         },
-      }));
+      })];
   }
 
   const BLOCKS = [["p", "Paragraph"], ["h", "Heading"], ["ul", "Bullet list"], ["img", "Picture"], ["yt", "YouTube video"], ["link", "Link"], ["mono", "Code / technical text"]];
@@ -924,11 +969,17 @@
       if (!String(m.title || "").trim()) out.push("Music: a song has no title.");
       if (!m.id) out.push("Music: “" + (m.title || "a song") + "” has no YouTube or SoundCloud link.");
     });
-    TECH.forEach(([k, n]) => C.tech[k].items.forEach((p) => {
+    const paths = new Set();
+    C.tech.forEach((t) => {
+      if (!L(t.name)) out.push("Music Technology: a category has no name.");
+      if (!t.path || paths.has(t.path)) out.push("Music Technology: two categories have the same page address — rename one.");
+      paths.add(t.path);
+    });
+    C.tech.forEach((t) => { const n = L(t.name) || "Music Technology"; t.items.forEach((p) => {
       if (!String(p.title || "").trim() || !p.slug) out.push(n + ": a project has no name.");
       if (!p.cover) out.push(n + ": “" + (p.title || "a project") + "” has no cover picture.");
       (p.blocks || []).forEach((b) => { if (b.type === "yt" && !b.id) out.push(n + ": “" + p.title + "” has an empty YouTube part."); if (b.type === "img" && !b.src) out.push(n + ": “" + p.title + "” has an empty picture part."); });
-    }));
+    }); });
     C.academic.forEach((a) => { if (!L(a.title)) out.push("Academic: a project has no title."); if (!a.thumb) out.push("Academic: “" + L(a.title) + "” has no picture."); });
     ["work", "education"].forEach((k) => C.cv[k].forEach((x) => { if (!L(x.title)) out.push("CV: an entry has no title — fill it in or delete it."); }));
     C.selected.forEach((s) => { if (!s.title || !s.image) out.push("Home: a selected work card needs a title and a picture."); });
@@ -1113,6 +1164,7 @@
       busy = ""; status();
       if (!w.ok) { await buildTrouble(w, "live site"); return; }
       unpublished = false;
+      newItems = new WeakSet(); // published: page addresses are fixed from now on
       status();
       await dialog({ title: "It's live", body: "Your changes are now on giorgosbatzios.com. (If you still see the old version, refresh the page.)", buttons: [{ label: "Close", value: true }, { label: "Open the site ↗", href: LIVE_URL + ((TABS.find((t) => t[0] === tab) || [, , "/"])[2]), primary: true, value: true }] });
     } catch (err) {

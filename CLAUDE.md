@@ -12,8 +12,10 @@ Make the change, rebuild, check, commit and push. Keep replies short and non-tec
   - Keys: `site` (name, role, fields, email, phone, form_key), `social`, `images` (page photos), `ui` (menu/buttons),
     `text` (page intros, Google descriptions; `{n}` `{from}` `{to}` are filled in by build.py), `theater`,
     `studio_cats` + `studio` (+ `featured_studio` = YouTube id), `music` (`type` "yt" or "sc"; `id` = YouTube id,
-    SoundCloud track number or soundcloud.com link), `tech` (`m4l`/`arduino`/`plugins`, each project has `slug`,
-    `cover`, `summary`, `download`, `blocks` of type p/h/ul/img/yt/link/mono), `selected` (home cards), `academic`, `cv`.
+    SoundCloud track number or soundcloud.com link), `tech` (LIST of Music Technology categories, each its own page and
+    menu entry: `path` like "/max4live-devices/", `name{}`, `lede{}`, `kind` "m4l"|"plugin"|"project" (schema.org type),
+    `items` = projects with `slug`, `cover`, `summary`, `download`, `blocks` of type p/h/ul/img/yt/link/mono),
+    `selected` (home cards), `academic`, `cv`. The owner can add/rename/reorder categories in GB EDITOR.
   - Roles are `{en, el}` pairs inside each item; reuse the same wording as existing items.
 - `source/render.mjs` — ALL page templates (pure JS, runs in Node and in the browser). English at `/`, Greek at `/el/`.
   Don't change design unless asked. GB EDITOR uses this same file for its instant preview, so preview = real site.

@@ -43,8 +43,6 @@ const ICONS = {
 };
 const NAV = [["/theater/", "theater"], ["/studio/", "studio"], ["/music/", "music"], ["MT", "tech"],
   ["/curriculum-vitae/", "cv"], ["/academic-portfolio/", "academic"], ["/contact/", "contact"]];
-const MT = [["/music-technology/", "overview"], ["/max4live-devices/", "m4l"], ["/arduino-projects/", "arduino"], ["/daw-plugins/", "plugins"]];
-const SECTIONS = [["/max4live-devices/", "m4l"], ["/arduino-projects/", "arduino"], ["/daw-plugins/", "plugins"]];
 
 export function render(content, opts = {}) {
   const exists = opts.exists || (() => false);
@@ -58,6 +56,8 @@ export function render(content, opts = {}) {
   const FEATURED_STUDIO = D.featured_studio;
   const SELECTED = D.selected, ACADEMIC = D.academic, CV = D.cv;
   const NAME = { en: SITE.name, el: SITE.name_el || SITE.name };
+  // Music Technology categories, each with its own page: [{ path, name{en,el}, lede{en,el}, kind, items[] }]
+  const TECH = D.tech;
   const files = {}, cards = [], PAGES = [];
 
   const L = (x, lang) => (x == null ? "" : typeof x === "object" ? x[lang] || x.en || "" : x);
@@ -98,8 +98,9 @@ export function render(content, opts = {}) {
   function nav(cur, lang) {
     return NAV.map(([href, key]) => {
       if (href === "MT") {
+        const MT = [["/music-technology/", u("overview", lang)], ...TECH.map((t) => [t.path, L(t.name, lang)])];
         const curmt = MT.some(([h]) => cur.startsWith(h));
-        const subs = MT.map(([h, k]) => `<a href="${U(lang, h)}"${cur === h ? " aria-current=page" : ""}>${u(k, lang)}</a>`).join("");
+        const subs = MT.map(([h, n]) => `<a href="${U(lang, h)}"${cur === h ? " aria-current=page" : ""}>${n}</a>`).join("");
         return `<details class="${curmt ? "is-current" : ""}"><summary>${u(key, lang)}</summary><div class="sub">${subs}</div></details>`;
       }
       const ac = cur.startsWith(href) ? ' aria-current="page"' : "";
@@ -205,7 +206,7 @@ ${socials_html()}
   function build_home(lang) {
     const ys = [...new Set(THEATER.map((t) => parseInt(t.year, 10)))].sort((a, b) => a - b);
     const years = ys.length ? ys : [YEAR];
-    const n_tech = ["m4l", "arduino", "plugins"].reduce((n, k) => n + D.tech[k].items.length, 0);
+    const n_tech = TECH.reduce((n, t) => n + t.items.length, 0);
     const rows = [
       ["/theater/", u("theater", lang), tx("home_meta_theater", lang, { n: THEATER.length, from: years[0], to: years[years.length - 1] })],
       ["/studio/", u("studio", lang), tx("home_meta_studio", lang, { n: STUDIO.length })],
@@ -335,19 +336,19 @@ ${close_tag}`);
     }).join("");
   }
   function build_tech(lang) {
-    const secs = SECTIONS.filter(([, k]) => D.tech[k].items.length).map(([b, k]) =>
-      `<section><div class="sec-title"><h2><a href="${U(lang, b)}">${u(k, lang)}</a></h2><a class="small muted" href="${U(lang, b)}">${u("view_all", lang)} →</a></div>` +
-      `<div class="proj-grid">${cards_for(b, D.tech[k].items, lang)}</div></section>`).join("");
+    const secs = TECH.filter((t) => t.items.length).map((t) =>
+      `<section><div class="sec-title"><h2><a href="${U(lang, t.path)}">${L(t.name, lang)}</a></h2><a class="small muted" href="${U(lang, t.path)}">${u("view_all", lang)} →</a></div>` +
+      `<div class="proj-grid">${cards_for(t.path, t.items, lang)}</div></section>`).join("");
     const lede = tx("tech_lede", lang);
     const body = head(u("tech_long", lang), tx("tech_kicker", lang), lede) + `<div class="wrap">${secs}</div>`;
     page("/music-technology/", lang, u("tech_long", lang), lede, body, { kicker: tx("tech_kicker", lang) });
-    for (const [base, key] of SECTIONS) {
-      const items = D.tech[key].items;
-      const sect_lede = L(D.tech[key].lede, lang);
-      const title = u(key, lang);
+    for (const t of TECH) {
+      const base = t.path, items = t.items;
+      const sect_lede = L(t.lede, lang);
+      const title = L(t.name, lang);
       const b = head(title, u("tech_long", lang), sect_lede) + `<div class="wrap"><div class="proj-grid">${cards_for(base, items, lang)}</div></div>`;
       page(base, lang, title, `${title} — ${NAME[lang]}. ${sect_lede}`, b, { kicker: u("tech_long", lang), crumbs: [[u("tech_long", lang), "/music-technology/"], [title, base]] });
-      items.forEach((_, i) => build_project(base, title, items, i, lang));
+      items.forEach((_, i) => build_project(t, title, items, i, lang));
     }
   }
   function block(b, title, lang) {
@@ -366,7 +367,8 @@ ${close_tag}`);
     if (k === "mono") return `<div class="mono">${e(b.text)}</div>`;
     return "";
   }
-  function build_project(base, sect, items, i, lang) {
+  function build_project(sec, sect, items, i, lang) {
+    const base = sec.path;
     const p = items[i];
     const d = p.download;
     const dl = d && d.url ? `<a class="btn" href="${e(d.url)}" target="_blank" rel="noopener">${e(L(d.label, lang))}${ARROW}</a>` : "";
@@ -385,14 +387,14 @@ ${close_tag}`);
     const path = base + p.slug + "/";
     const image = p.cover ? { image: SITE.url + sq(p.cover, 1500) } : {};
     let item;
-    if (base === "/arduino-projects/") {
+    if (sec.kind !== "m4l" && sec.kind !== "plugin") {
       item = { "@type": "CreativeWork", name: p.title, description: summ || sect, ...image,
         author: { "@id": SITE.url + "/#person" }, url: SITE.url + U(lang, path), inLanguage: lang };
     } else {
       item = { "@type": "SoftwareApplication", name: p.title, description: summ || sect,
         applicationCategory: "MultimediaApplication",
-        applicationSubCategory: base === "/max4live-devices/" ? "Max for Live device" : "Audio plugin",
-        operatingSystem: base === "/max4live-devices/" ? "Ableton Live (Max for Live)" : "Windows, macOS",
+        applicationSubCategory: sec.kind === "m4l" ? "Max for Live device" : "Audio plugin",
+        operatingSystem: sec.kind === "m4l" ? "Ableton Live (Max for Live)" : "Windows, macOS",
         ...image, author: { "@id": SITE.url + "/#person" }, url: SITE.url + U(lang, path),
         offers: { "@type": "Offer", price: "0", priceCurrency: "EUR" } };
       if (d && d.url) item.downloadUrl = d.url;
@@ -504,8 +506,9 @@ ${close_tag}`);
   page("/404/", "en", "Page not found", "Page not found.", body404);
 
   const lines = [...STUDIO.filter((s) => s.old).map((s) => `/studio/v/${s.old}  /studio/  301`), "/studio/v/*  /studio/  301"];
-  for (const [base, key] of SECTIONS) {
-    for (const p of D.tech[key].items) if (p.old && p.old !== p.slug) lines.push(`${base.replace(/\/+$/, "")}/${p.old}  ${base}${p.slug}/  301`);
+  for (const t of TECH) {
+    const base = t.path;
+    for (const p of t.items) if (p.old && p.old !== p.slug) lines.push(`${base.replace(/\/+$/, "")}/${p.old}  ${base}${p.slug}/  301`);
   }
   lines.push("/studio/recording  /studio/  301", "/studio/mixing  /studio/  301", "/studio/production  /studio/  301",
     "/studio/video-edit  /studio/  301", "/studio/custom-sound-library  /studio/  301", "/cart  /  301");

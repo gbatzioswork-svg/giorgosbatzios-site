@@ -88,18 +88,6 @@
    "en": "Overview",
    "el": "Επισκόπηση"
   },
-  "m4l": {
-   "en": "Max4Live Devices",
-   "el": "Max4Live Devices"
-  },
-  "arduino": {
-   "en": "Arduino Projects",
-   "el": "Arduino Projects"
-  },
-  "plugins": {
-   "en": "DAW Plugins",
-   "el": "DAW Plugins"
-  },
   "cv": {
    "en": "CV",
    "el": "Βιογραφικό"
@@ -1346,12 +1334,18 @@
    "note": null
   }
  ],
- "tech": {
-  "m4l": {
+ "tech": [
+  {
+   "path": "/max4live-devices/",
+   "name": {
+    "en": "Max4Live Devices",
+    "el": "Max4Live Devices"
+   },
    "lede": {
     "en": "Free devices for Ableton Live, built in Max.",
     "el": "Δωρεάν devices για το Ableton Live, φτιαγμένα σε Max."
    },
+   "kind": "m4l",
    "items": [
     {
      "slug": "next-loop",
@@ -1509,11 +1503,17 @@
     }
    ]
   },
-  "arduino": {
+  {
+   "path": "/arduino-projects/",
+   "name": {
+    "en": "Arduino Projects",
+    "el": "Arduino Projects"
+   },
    "lede": {
     "en": "Hardware controllers and sensor systems for live performance and shows.",
     "el": "Hardware controllers και συστήματα με σένσορες για live performance και παραστάσεις."
    },
+   "kind": "project",
    "items": [
     {
      "slug": "video-selector-console",
@@ -1899,11 +1899,17 @@
     }
    ]
   },
-  "plugins": {
+  {
+   "path": "/daw-plugins/",
+   "name": {
+    "en": "DAW Plugins",
+    "el": "DAW Plugins"
+   },
    "lede": {
     "en": "Audio plugins for mixing and spatial sound.",
     "el": "Audio plugins για μίξη."
    },
+   "kind": "plugin",
    "items": [
     {
      "slug": "telestage",
@@ -1947,7 +1953,7 @@
     }
    ]
   }
- },
+ ],
  "selected": [
   {
    "title": "Αντιγόνη",
