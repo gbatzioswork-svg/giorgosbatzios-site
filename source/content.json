@@ -1952,6 +1952,45 @@
      ]
     }
    ]
+  },
+  {
+   "path": "/tools/",
+   "name": {
+    "en": "Tools",
+    "el": "Εργαλεία"
+   },
+   "lede": {
+    "en": "Tools for theater and live",
+    "el": "Ψηφιακά εργαλεία για θέατρο και live"
+   },
+   "kind": "project",
+   "items": [
+    {
+     "slug": "test",
+     "title": "test",
+     "cover": "/assets/img/project-test-8f6ik.webp",
+     "summary": {
+      "en": "",
+      "el": ""
+     },
+     "download": {
+      "url": "",
+      "label": {
+       "en": "Download",
+       "el": "Λήψη"
+      }
+     },
+     "blocks": [
+      {
+       "type": "p",
+       "text": {
+        "en": "",
+        "el": ""
+       }
+      }
+     ]
+    }
+   ]
   }
  ],
  "selected": [
