@@ -351,8 +351,8 @@
    "el": "Εργαλεία που φτιάχνω για το Ableton Live, για τη σκηνή και για τη μίξη."
   },
   "tech_kicker": {
-   "en": "Max4Live, Arduino, plugins",
-   "el": "Max4Live, Arduino, plugins"
+   "en": "Max4Live, Arduino, plugins, online tools",
+   "el": "Max4Live, Arduino, plugins, online εργαλεία"
   },
   "academic_lede": {
    "en": "Coursework, live performances and final projects from my studies.",
@@ -1956,36 +1956,143 @@
   {
    "path": "/tools/",
    "name": {
-    "en": "Tools",
-    "el": "Εργαλεία"
+    "en": "Online Tools",
+    "el": "Online Εργαλεία"
    },
    "lede": {
-    "en": "Tools for theater and live",
-    "el": "Ψηφιακά εργαλεία για θέατρο και live"
+    "en": "Web apps I built for theater and live shows. They run in the browser, with nothing to install.",
+    "el": "Web εφαρμογές που έφτιαξα για το θέατρο και τα live. Τρέχουν στον browser, χωρίς εγκατάσταση."
    },
    "kind": "project",
    "items": [
     {
-     "slug": "test",
-     "title": "test",
-     "cover": "/assets/img/project-test-8f6ik.webp",
+     "slug": "my-script-editor",
+     "title": "My Script Editor",
+     "cover": "/assets/img/online-my-script-editor.webp",
      "summary": {
-      "en": "",
-      "el": ""
+      "en": "Mark up a theater script with numbered cues and share them live with the crew.",
+      "el": "Σημειώνεις cues πάνω στο κείμενο της παράστασης και τα μοιράζεσαι live με την ομάδα."
      },
      "download": {
-      "url": "",
+      "url": "https://myscripteditor.gbatzios-work.workers.dev/",
       "label": {
-       "en": "Download",
-       "el": "Λήψη"
+       "en": "Open the app",
+       "el": "Άνοιγμα εφαρμογής"
       }
      },
      "blocks": [
       {
        "type": "p",
        "text": {
-        "en": "",
-        "el": ""
+        "en": "My Script Editor turns the script of a show into a cue sheet. You open the PDF of the script, select a line and add a numbered cue for sound, lights, QLab or an instruction for the technicians.",
+        "el": "Το My Script Editor κάνει το κείμενο μιας παράστασης φύλλο cues. Ανοίγεις το PDF του κειμένου, επιλέγεις μια γραμμή και προσθέτεις ένα αριθμημένο cue για ήχο, φώτα, QLab ή μια οδηγία για τους τεχνικούς."
+       }
+      },
+      {
+       "type": "ul",
+       "items": [
+        {
+         "en": "Cues by type (QLab, sound, lights, instructions), with text and shapes on the page",
+         "el": "Cues ανά είδος (QLab, ήχος, φώτα, οδηγίες), με κείμενο και σχήματα πάνω στη σελίδα"
+        },
+        {
+         "en": "Renumber all cues in one go, undo and redo",
+         "el": "Αναρίθμηση όλων των cues με μια κίνηση, αναίρεση και επανάληψη"
+        },
+        {
+         "en": "Export the script as a PDF with or without cues, filtered by type, or as a cue report",
+         "el": "Εξαγωγή του κειμένου σε PDF με ή χωρίς cues, ανά είδος, ή ως λίστα cues"
+        },
+        {
+         "en": "Live view: share the cue sheet with the crew during the show",
+         "el": "Live προβολή: μοιράζεσαι τα cues με την ομάδα την ώρα της παράστασης"
+        },
+        {
+         "en": "Accounts and saved projects, dark or light look, English and Greek",
+         "el": "Λογαριασμοί και αποθηκευμένα projects, σκούρα ή ανοιχτή εμφάνιση, Αγγλικά και Ελληνικά"
+        }
+       ]
+      },
+      {
+       "type": "img",
+       "src": "/assets/img/online-my-script-editor.webp",
+       "caption": {
+        "en": "A script with two cues in My Script Editor",
+        "el": "Ένα κείμενο με δύο cues στο My Script Editor"
+       }
+      },
+      {
+       "type": "link",
+       "url": "https://myscripteditor.gbatzios-work.workers.dev/",
+       "label": {
+        "en": "Open My Script Editor",
+        "el": "Άνοιγμα του My Script Editor"
+       }
+      }
+     ]
+    },
+    {
+     "slug": "go-playback-engine",
+     "title": "Go Playback Engine",
+     "cover": "/assets/img/online-go-playback-engine.webp",
+     "summary": {
+      "en": "Sound and video playback for theater and live shows, in the browser: press GO for the next cue.",
+      "el": "Αναπαραγωγή ήχου και βίντεο για θέατρο και live, μέσα στον browser: πατάς GO για το επόμενο cue."
+     },
+     "download": {
+      "url": "https://itsthegoshow.netlify.app/",
+      "label": {
+       "en": "Open the app",
+       "el": "Άνοιγμα εφαρμογής"
+      }
+     },
+     "blocks": [
+      {
+       "type": "p",
+       "text": {
+        "en": "Go Playback Engine is a show-control and playback app for stage, theater and live events. It plays audio and video cues and runs entirely in the browser.",
+        "el": "Το Go Playback Engine είναι εφαρμογή αναπαραγωγής και ελέγχου παράστασης για σκηνή, θέατρο και live. Παίζει cues ήχου και βίντεο και τρέχει εξ ολοκλήρου στον browser."
+       }
+      },
+      {
+       "type": "ul",
+       "items": [
+        {
+         "en": "Show Timeline: a cue list in show order, press GO (Space) to fire the next cue",
+         "el": "Show Timeline: λίστα cues με τη σειρά της παράστασης, πατάς GO (Space) για το επόμενο cue"
+        },
+        {
+         "en": "Session mode: a grid where whole rows play together",
+         "el": "Session mode: πλέγμα όπου ολόκληρες σειρές παίζουν μαζί"
+        },
+        {
+         "en": "Pad mode: 16 pads for instant sound effects",
+         "el": "Pad mode: 16 pads για άμεσα ηχητικά εφέ"
+        },
+        {
+         "en": "Audio, video, fade and crossfade cues, cue groups and a master DIM",
+         "el": "Cues ήχου, βίντεο, fade και crossfade, ομάδες cues και master DIM"
+        },
+        {
+         "en": "Video to external screens with four-corner warping",
+         "el": "Βίντεο σε εξωτερικές οθόνες με διόρθωση γωνιών (four-corner warping)"
+        }
+       ]
+      },
+      {
+       "type": "img",
+       "src": "/assets/img/online-go-playback-engine-ui.webp",
+       "caption": {
+        "en": "The Show Timeline workspace",
+        "el": "Ο χώρος εργασίας Show Timeline"
+       }
+      },
+      {
+       "type": "link",
+       "url": "https://itsthegoshow.netlify.app/",
+       "label": {
+        "en": "Open Go Playback Engine",
+        "el": "Άνοιγμα του Go Playback Engine"
        }
       }
      ]
