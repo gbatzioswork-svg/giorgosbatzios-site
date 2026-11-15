@@ -812,6 +812,7 @@
               addr.textContent = "Page address: giorgosbatzios.com" + path + s + "/";
             } }),
             addr,
+            textField(p, "url", "Website link — optional: the card then opens this website instead of its own page", { type: "url", placeholder: "https://…" }),
             biField(p, "summary", "Short description (on the card)"),
             imgField(p, "cover", "Cover picture", () => "project-" + (p.slug || slug(p.title))),
             p.download ? h("div", { class: "panel", style: "background:var(--paper)" },

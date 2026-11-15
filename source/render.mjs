@@ -331,7 +331,9 @@ ${close_tag}`);
   function cards_for(base, items, lang) {
     return items.map((p) => {
       const summ = L(p.summary, lang) ? `<p>${e(L(p.summary, lang))}</p>` : "";
-      return `<a class="proj" href="${U(lang, base + p.slug + "/")}"><div class="thumb"><img src="${sq(p.cover, 800)}" alt="${e(p.title)}" loading="lazy" decoding="async" width="800" height="600"></div>` +
+      // a project with `url` is a link to an outside website (e.g. an online tool) instead of its own page
+      const open = p.url ? `<a class="proj" href="${e(p.url)}" target="_blank" rel="noopener">` : `<a class="proj" href="${U(lang, base + p.slug + "/")}">`;
+      return `${open}<div class="thumb"><img src="${sq(p.cover, 800)}" alt="${e(p.title)}" loading="lazy" decoding="async" width="800" height="600"></div>` +
         `<div><h3>${e(p.title)}</h3>${summ}</div></a>`;
     }).join("");
   }
@@ -348,7 +350,8 @@ ${close_tag}`);
       const title = L(t.name, lang);
       const b = head(title, u("tech_long", lang), sect_lede) + `<div class="wrap"><div class="proj-grid">${cards_for(base, items, lang)}</div></div>`;
       page(base, lang, title, `${title} — ${NAME[lang]}. ${sect_lede}`, b, { kicker: u("tech_long", lang), crumbs: [[u("tech_long", lang), "/music-technology/"], [title, base]] });
-      items.forEach((_, i) => build_project(t, title, items, i, lang));
+      const pages = items.filter((p) => !p.url);
+      pages.forEach((_, i) => build_project(t, title, pages, i, lang));
     }
   }
   function block(b, title, lang) {
