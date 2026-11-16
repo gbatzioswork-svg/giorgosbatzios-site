@@ -138,7 +138,7 @@ export function render(content, opts = {}) {
     const graph = [...(ld || [])];
     if (path !== "/" && path !== "/404/") graph.push(crumb_ld(lang, crumbs !== null ? crumbs : [[title, path]]));
     const ldtag = graph.length ? '<script type="application/ld+json">' + pyjson({ "@context": "https://schema.org", "@graph": graph }) + "</script>\n" : "";
-    const copy = `© ${YEAR} ${NAME[lang]}` + (lang === "el" ? ` · ${NAME.en}` : "");
+    const copy = `© ${YEAR} ${NAME[lang]} · ${NAME[lang === "el" ? "en" : "el"]}`;
     let doc = `<!doctype html>
 <html lang="${lang}">
 <head>
@@ -172,7 +172,7 @@ ${ldtag}</head>
 <svg width="0" height="0" style="position:absolute" aria-hidden="true"><defs><clipPath id="m-squircle" clipPathUnits="objectBoundingBox"><path d="M0.5,0 C0.768,0,0.894,0.056,0.919,0.081 C0.944,0.106,1,0.242,1,0.505 C1,0.768,0.947,0.891,0.919,0.919 C0.891,0.947,0.768,1,0.5,1 C0.202,1,0.11,0.948,0.081,0.919 C0.052,0.89,0,0.768,0,0.5 C0,0.232,0.053,0.109,0.081,0.081 C0.109,0.053,0.232,0,0.5,0"/></clipPath><clipPath id="m-octagon" clipPathUnits="objectBoundingBox"><path d="M0.5,0 L0.957,0.065,1,0.5,0.957,0.935 L0.5,1,0.043,0.935,0,0.5,0.043,0.065,0.5,0"/></clipPath></defs></svg>
 <a class="skip" href="#main">${u("skip", lang)}</a>
 <header class="site-head"><div class="wrap head-row">
-<a class="mark dotted" href="${U(lang, "/")}">${e(NAME.en)}</a>
+<a class="mark dotted" href="${U(lang, "/")}">${e(NAME[lang])}</a>
 <div class="head-right">
 <nav class="nav" id="nav" aria-label="Main">${nav(path, lang)}</nav>
 <a class="lang" href="${U(other, path)}" hreflang="${other}" lang="${other}" title="${u("switch", lang)}">${other.toUpperCase()}</a>
@@ -220,8 +220,8 @@ ${socials_html()}
     const sel = SELECTED.map((s) =>
       `<a class="sel" href="${U(lang, s.link)}"><div class="thumb"><img src="${sq(s.image, 800)}" alt="${e(s.title)}" loading="lazy" decoding="async" width="800" height="600"></div>` +
       `<div><p class="kicker">${L(s.kicker, lang)}</p><h3 lang="${lang_of(s.title)}">${e(s.title)}</h3><p class="line">${L(s.line, lang)}</p></div></a>`).join("");
-    const sp = NAME.en.indexOf(" ");
-    const first = sp < 0 ? NAME.en : NAME.en.slice(0, sp), last = sp < 0 ? "" : NAME.en.slice(sp + 1);
+    const sp = NAME[lang].indexOf(" ");
+    const first = sp < 0 ? NAME[lang] : NAME[lang].slice(0, sp), last = sp < 0 ? "" : NAME[lang].slice(sp + 1);
     const body = `
 <div class="wrap">
   <section class="hero">
