@@ -34,7 +34,9 @@ Make the change, rebuild, check, commit and push. Keep replies short and non-tec
   (one address for Google; canonical/sitemap use www), serves GB EDITOR on editor.giorgosbatzios.com and its `/api/*`, then serves `./site`.
 - `source/ogcard.py` + `source/og-fonts/` — build.py draws a 1200×630 share-preview card per page into `site/og/`.
 - `source/assets/fonts/` — self-hosted Geist (Latin) + Inter (Greek letters), OFL licensed. No Google Fonts.
-- Name: English pages use "Giorgos Batzios", Greek pages "Γιώργος Μπάτζιος" (`NAME` in build.py).
+- Name: English pages use "Giorgos Batzios", Greek pages "Γιώργος Μπάτζιος" (`NAME` in render.mjs); every footer shows both.
+- Search: the owner wants ALL searches (also "Γιώργος Μπάτζιος") to land on the English site. Greek pages are
+  `noindex, follow`, no hreflang, sitemap lists English pages only; the English home title carries both names.
 - Every page has schema.org data (Person, WebSite, BreadcrumbList, VideoObject list for Studio, CreativeWork list for Theater,
   SoftwareApplication for devices/plugins). Every `<img>` needs a descriptive `alt` in the page's language.
 

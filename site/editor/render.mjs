@@ -128,7 +128,7 @@ export function render(content, opts = {}) {
     let full;
     if (title) full = `${title} — ${NAME[lang]}`;
     else if (lang === "el") full = `${NAME.el} (${NAME.en}) — ${L(SITE.role, lang)}`;
-    else full = `${NAME.en} — ${L(SITE.role, lang)}`;
+    else full = `${NAME.en} (${NAME.el}) — ${L(SITE.role, lang)}`;
     const other = lang === "en" ? "el" : "en";
     const url = SITE.url + U(lang, path);
     const full_path = U(lang, path);
@@ -148,10 +148,7 @@ export function render(content, opts = {}) {
 <meta name="theme-color" content="#0d0d0e">
 <title>${e(full)}</title>
 <meta name="description" content="${e(desc)}">
-<link rel="canonical" href="${url}">
-<link rel="alternate" hreflang="en" href="${SITE.url}${U("en", path)}">
-<link rel="alternate" hreflang="el" href="${SITE.url}${U("el", path)}">
-<link rel="alternate" hreflang="x-default" href="${SITE.url}${U("en", path)}">
+${lang === "en" ? `<link rel="canonical" href="${url}">` : '<meta name="robots" content="noindex, follow">'}
 <meta property="og:type" content="website">
 <meta property="og:locale" content="${lang === "en" ? "en_US" : "el_GR"}">
 <meta property="og:title" content="${e(full)}">
@@ -520,12 +517,11 @@ ${close_tag}`);
   const urls = [];
   for (const p of PAGES) {
     if (p === "/404/" || p.startsWith("/el/")) continue;
-    const en = SITE.url + p, gr = SITE.url + "/el" + p;
-    const alt = `<xhtml:link rel="alternate" hreflang="en" href="${en}"/>` + `<xhtml:link rel="alternate" hreflang="el" href="${gr}"/>`;
-    urls.push(`<url><loc>${en}</loc>${alt}</url><url><loc>${gr}</loc>${alt}</url>`);
+    // search engines only get the English site; visitors switch to Greek with the EL button (Greek pages are noindex)
+    urls.push(`<url><loc>${SITE.url + p}</loc></url>`);
   }
-  files["/sitemap.xml"] = '<?xml version="1.0" encoding="UTF-8"?><urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9" ' +
-    `xmlns:xhtml="http://www.w3.org/1999/xhtml">${urls.join("")}</urlset>\n`;
+  files["/sitemap.xml"] = '<?xml version="1.0" encoding="UTF-8"?><urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">' +
+    `${urls.join("")}</urlset>\n`;
   files["/_headers"] = "/assets/img/*\n  Cache-Control: public, max-age=31536000, immutable\n" +
     "/assets/fonts/*\n  Cache-Control: public, max-age=31536000, immutable\n" +
     "/og/*\n  Cache-Control: public, max-age=604800\n" +
