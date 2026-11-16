@@ -109,7 +109,7 @@ export function render(content, opts = {}) {
   }
   const person_ld = () => ({
     "@type": "Person", "@id": SITE.url + "/#person", name: SITE.name,
-    alternateName: [NAME.el, "Georgios Batzios", "George Batzios"], url: SITE.url + "/",
+    alternateName: [NAME.el, "Γιωργος Μπατζιος", "Giorgos Mpatzios", "Giwrgos Batzios", "Giwrgos Mpatzios", "Georgios Batzios", "George Batzios"], url: SITE.url + "/",
     image: SITE.url + sq(IMG.home1, 1500), jobTitle: "Sound Engineer",
     description: "Audio and sound engineer and musician in Athens: theater sound, live mixing, studio recording, mixing, composing and music technology.",
     email: "mailto:" + SITE.email,
